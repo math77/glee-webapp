@@ -875,7 +875,10 @@ import { CanvasData } from '@/types';
 
 import { convertCanvasForContractArtwork } from '../../../utils/swissknife';
 import { pixelatedDelightsABI, PIXELATED_DELIGHTS_CONTRACT_ADDRESS } from '../../../utils/contractAbi';
+
 import MintCanvas from '../MintCanvas/MintCanvas';
+import { NFT_MINT_LAUNCHED, NFT_NOT_LAUNCHED_MESSAGE } from '../../../utils/nftLaunch';
+import Link from 'next/link';
 
 interface EmojiTownMainPageProps {
   userAddress: Address;
@@ -1439,6 +1442,33 @@ const ColorTownCreate: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
   const canvasNumberLabel = selectedCanvasData?.networkId
     ? `No. ${selectedCanvasData.networkId}`
     : 'Unminted preview';
+
+  
+  if (!NFT_MINT_LAUNCHED) {
+    return (
+      <div className="site-shell flex min-h-screen flex-col text-[var(--foreground)]">
+        <Header
+          toggleMusic={backgroundMusic.toggleMute}
+          isMusicMuted={backgroundMusic.isMuted}
+          isMusicPlaying={backgroundMusic.isPlaying}
+        />
+        <main className="mx-auto flex max-w-2xl flex-1 flex-col items-center justify-center px-6 pt-24 text-center">
+          <p className="eyebrow-quiet">Coming soon</p>
+          <h1 className="mt-5 font-[family-name:var(--font-fraunces)] text-4xl italic leading-tight text-[var(--foreground)] sm:text-5xl">
+            The studio isn&apos;t open yet.
+          </h1>
+          <p className="mt-5 max-w-md leading-relaxed text-[var(--foreground-muted)]">
+            {NFT_NOT_LAUNCHED_MESSAGE}
+          </p>
+          <Link href="/about">
+            <motion.span whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }} className="quiet-button quiet-button--filled mt-8 inline-flex px-6 py-3 text-sm">
+              Learn about $GLEE
+            </motion.span>
+          </Link>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="site-shell min-h-screen flex flex-col font-[family-name:var(--font-geist-sans)] text-[var(--foreground)]">

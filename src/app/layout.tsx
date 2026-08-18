@@ -47,6 +47,8 @@ import "./globals.css";
 
 import Web3Provider from "./Web3Provider";
 import { ToastProvider } from "@/components/Toast/ToastProvider";
+import AttributionBanner from "@/components/AttributionBanner/AttributionBanner";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -88,6 +90,7 @@ export default function RootLayout({
         <Web3Provider>
           <ToastProvider>
             {children}
+            <AttributionBanner />
           </ToastProvider>
         </Web3Provider>
       </body>

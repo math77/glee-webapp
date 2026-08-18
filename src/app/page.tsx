@@ -142,7 +142,9 @@ import Header from "@/components/Header/Header";
 import MintCanvas from "@/components/MintCanvas/MintCanvas";
 import Pending from "@/components/Pending/Pending";
 import GleeTokenNotice from "@/components/GleeTokenNotice/GleeTokenNotice";
+import NftLaunchNotice from "@/components/NftLaunchNotice/NftLaunchNotice";
 import { pixelatedDelightsABI, PIXELATED_DELIGHTS_CONTRACT_ADDRESS } from "../../utils/contractAbi";
+import { NFT_MINT_LAUNCHED } from "../../utils/nftLaunch";
 
 const artworks = ["image1", "image2", "image3", "image4", "image5", "image6", "image7", "image8", "image9"];
 
@@ -239,7 +241,9 @@ export default function Home() {
               </p>
             </div>
             <div className="studio-panel mx-auto w-full max-w-md p-6">
-              {isPending ? (
+              {!NFT_MINT_LAUNCHED ? (
+                <NftLaunchNotice className="border-0 bg-transparent p-0" />
+              ) : isPending ? (
                 <div className="flex justify-center py-8">
                   <Pending className="animate-spin" />
                 </div>
@@ -303,9 +307,8 @@ export default function Home() {
       <footer className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-8 text-sm text-[var(--foreground-muted)] sm:flex-row sm:items-center sm:justify-between">
         <span className="font-[family-name:var(--font-fraunces)] italic text-[var(--foreground)]">Glee<span className="text-[var(--accent)]">.</span> onchain pixel art</span>
         <div className="flex gap-5">
-          <a href="https://x.com/hibyded" className="transition-colors hover:text-[var(--foreground)]">X</a>
-          <a href="https://warpcast.com/byded" className="transition-colors hover:text-[var(--foreground)]">Warpcast</a>
-          <a href="https://t.me/+0KcxEHKK2QZlMmUx" className="transition-colors hover:text-[var(--foreground)]">Telegram</a>
+          <a href="https://x.com/GLEEproj" target="_blank" className="transition-colors hover:text-[var(--foreground)]">X</a>
+          <a href="https://x.com/GLEEproj" target="_blank" className="transition-colors hover:text-[var(--foreground)]">PONS</a>
         </div>
       </footer>
     </div>
