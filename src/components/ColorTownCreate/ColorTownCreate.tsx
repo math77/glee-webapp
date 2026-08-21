@@ -862,7 +862,7 @@ import { simulateContract } from '@wagmi/core';
 import { createConfig } from '@wagmi/core';
 import { http } from '@wagmi/core';
 import { injected } from '@wagmi/core';
-import { baseSepolia, BASE_SEPOLIA_RPC_URL } from '../../../utils/chain';
+import { baseSepolia, BASE_SEPOLIA_RPC_URL } from '../../utils/chain';
 
 import Header from '../Header/Header';
 import ColorCanvas from '../ColorCanvas/ColorCanvas';
@@ -873,11 +873,11 @@ import useBackgroundMusic from '@/hooks/useBackgroundMusic';
 
 import { CanvasData } from '@/types';
 
-import { convertCanvasForContractArtwork } from '../../../utils/swissknife';
-import { pixelatedDelightsABI, PIXELATED_DELIGHTS_CONTRACT_ADDRESS } from '../../../utils/contractAbi';
+import { convertCanvasForContractArtwork } from '../../utils/swissknife';
+import { pixelatedDelightsABI, PIXELATED_DELIGHTS_CONTRACT_ADDRESS } from '../../utils/contractAbi';
 
 import MintCanvas from '../MintCanvas/MintCanvas';
-import { NFT_MINT_LAUNCHED, NFT_NOT_LAUNCHED_MESSAGE } from '../../../utils/nftLaunch';
+import { NFT_MINT_LAUNCHED, NFT_NOT_LAUNCHED_MESSAGE } from '../../utils/nftLaunch';
 import Link from 'next/link';
 
 interface EmojiTownMainPageProps {

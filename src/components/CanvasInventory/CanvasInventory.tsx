@@ -222,11 +222,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Address } from 'viem';
 import { readContract } from '@wagmi/core';
-import { pixelatedDelightsABI, PIXELATED_DELIGHTS_CONTRACT_ADDRESS } from '../../../utils/contractAbi';
+import { pixelatedDelightsABI, PIXELATED_DELIGHTS_CONTRACT_ADDRESS } from '../../utils/contractAbi';
 import { createConfig } from '@wagmi/core';
 import { http } from '@wagmi/core';
 import { injected } from '@wagmi/core';
-import { baseSepolia, BASE_SEPOLIA_RPC_URL } from '../../../utils/chain';
+import { baseSepolia, BASE_SEPOLIA_RPC_URL } from '../../utils/chain';
 import { CanvasData } from '@/types';
 
 interface Canvas {

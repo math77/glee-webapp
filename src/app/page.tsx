@@ -143,8 +143,8 @@ import MintCanvas from "@/components/MintCanvas/MintCanvas";
 import Pending from "@/components/Pending/Pending";
 import GleeTokenNotice from "@/components/GleeTokenNotice/GleeTokenNotice";
 import NftLaunchNotice from "@/components/NftLaunchNotice/NftLaunchNotice";
-import { pixelatedDelightsABI, PIXELATED_DELIGHTS_CONTRACT_ADDRESS } from "../../utils/contractAbi";
-import { NFT_MINT_LAUNCHED } from "../../utils/nftLaunch";
+import { pixelatedDelightsABI, PIXELATED_DELIGHTS_CONTRACT_ADDRESS } from "../utils/contractAbi";
+import { NFT_MINT_LAUNCHED } from "../utils/nftLaunch";
 
 const artworks = ["image1", "image2", "image3", "image4", "image5", "image6", "image7", "image8", "image9"];
 

@@ -1,4 +1,4 @@
-import { GLEE_TOKEN_LAUNCHED, GLEE_NOT_LAUNCHED_MESSAGE } from "../../../utils/gleeToken";
+import { GLEE_TOKEN_LAUNCHED, GLEE_NOT_LAUNCHED_MESSAGE } from "../../utils/gleeToken";
 
 interface GleeTokenNoticeProps {
   /** "banner" for prose sections (About, Home, Gallery); "inline" for tight UI like the tip form */

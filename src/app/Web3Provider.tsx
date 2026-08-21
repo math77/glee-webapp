@@ -11,7 +11,7 @@ import {
 import { WagmiProvider } from 'wagmi';
 import { http } from "wagmi";
 
-import { baseSepolia, BASE_SEPOLIA_RPC_URL } from "../../utils/chain";
+import { baseSepolia, BASE_SEPOLIA_RPC_URL } from "../utils/chain";
 
 import {
   QueryClientProvider,

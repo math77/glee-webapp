@@ -237,10 +237,10 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { parseEther } from "viem";
 import { useAccount, useReadContract, useSimulateContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
-import { pixelatedDelightsABI, PIXELATED_DELIGHTS_CONTRACT_ADDRESS } from "../../../utils/contractAbi";
+import { pixelatedDelightsABI, PIXELATED_DELIGHTS_CONTRACT_ADDRESS } from "../../utils/contractAbi";
 
-import { explorerTxUrl } from "../../../utils/explorer";
-import { NFT_MAX_SUPPLY } from "../../../utils/nftLaunch";
+import { explorerTxUrl } from "../../utils/explorer";
+import { NFT_MAX_SUPPLY } from "../../utils/nftLaunch";
 
 import { useToast } from "../Toast/ToastProvider";
 

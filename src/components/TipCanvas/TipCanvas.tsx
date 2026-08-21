@@ -226,8 +226,8 @@ import { motion } from "framer-motion";
 import { formatUnits, parseUnits, type Address } from "viem";
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { useSendCalls, useCallsStatus } from "wagmi/experimental";
-import { GLEE_CONTRACT_ADDRESS, pixelatedDelightsABI } from "../../../utils/contractAbi";
-import { explorerTxUrl } from "../../../utils/explorer";
+import { GLEE_CONTRACT_ADDRESS, pixelatedDelightsABI } from "../../utils/contractAbi";
+import { explorerTxUrl } from "../../utils/explorer";
 
 import { useToast } from "../Toast/ToastProvider";
 import GleeTokenNotice from "../GleeTokenNotice/GleeTokenNotice";

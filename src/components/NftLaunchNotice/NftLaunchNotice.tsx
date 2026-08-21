@@ -1,4 +1,4 @@
-import { NFT_MINT_LAUNCHED, NFT_NOT_LAUNCHED_MESSAGE } from "../../../utils/nftLaunch";
+import { NFT_MINT_LAUNCHED, NFT_NOT_LAUNCHED_MESSAGE } from "../../utils/nftLaunch";
 
 interface NftLaunchNoticeProps {
   variant?: "banner" | "inline";

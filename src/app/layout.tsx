@@ -48,6 +48,8 @@ import "./globals.css";
 import Web3Provider from "./Web3Provider";
 import { ToastProvider } from "@/components/Toast/ToastProvider";
 import AttributionBanner from "@/components/AttributionBanner/AttributionBanner";
+import { SITE_URL } from "@/utils/siteConfig";
+
 
 
 const geistSans = Geist({
@@ -73,8 +75,20 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "GLEE — Onchain Pixel Art",
   description: "Create a tiny onchain masterpiece on a 9×9 pixel canvas.",
+  openGraph: {
+    title: "GLEE — Onchain Pixel Art",
+    description: "Create a tiny onchain masterpiece on a 9×9 pixel canvas.",
+    url: SITE_URL,
+    siteName: "GLEE",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GLEE — Onchain Pixel Art",
+    description: "Create a tiny onchain masterpiece on a 9×9 pixel canvas.",
+  },
 };
 
 export default function RootLayout({

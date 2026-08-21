@@ -1,39 +1,3 @@
-/*
-"use client";
-
-import { useMemo, useState } from "react";
-import Header from "@/components/Header/Header";
-import TipCanvas from "@/components/TipCanvas/TipCanvas";
-import { useReadContract, useReadContracts } from "wagmi";
-import { GLEE_CONTRACT_ADDRESS, pixelatedDelightsABI } from "../../../utils/contractAbi";
-
-const MAX_GALLERY_CANVASES = 100;
-
-export default function Gallery() {
-  const [selectedCanvasId, setSelectedCanvasId] = useState<bigint | null>(null);
-  const { data: totalSupply = BigInt(0), isPending: supplyLoading } = useReadContract({ address: GLEE_CONTRACT_ADDRESS, abi: pixelatedDelightsABI, functionName: "totalSupply" });
-  const canvasIds = useMemo(() => Array.from({ length: Math.min(Number(totalSupply), MAX_GALLERY_CANVASES) }, (_, index) => BigInt(index + 1)), [totalSupply]);
-  const canvasReads = useMemo(() => canvasIds.map((id) => ({ address: GLEE_CONTRACT_ADDRESS, abi: pixelatedDelightsABI, functionName: "getCanvas" as const, args: [id] as const })), [canvasIds]);
-  const { data: canvasResults = [], isPending: canvasesLoading } = useReadContracts({ contracts: canvasReads });
-  const paintedCanvases = useMemo(() => canvasResults.flatMap((result, index) => {
-    if (result.status !== "success") return [];
-    const canvas = result.result as { amountReceivedOnTips: bigint; painted: boolean; artwork: { title: string; description: string; painter: string; artData: bigint } };
-    return canvas.painted ? [{ id: canvasIds[index], ...canvas }] : [];
-  }), [canvasIds, canvasResults]);
-  const svgReads = useMemo(() => paintedCanvases.map((canvas) => ({ address: GLEE_CONTRACT_ADDRESS, abi: pixelatedDelightsABI, functionName: "getCanvasAsSVG" as const, args: [canvas.artwork.artData] as const })), [paintedCanvases]);
-  const { data: svgResults = [] } = useReadContracts({ contracts: svgReads });
-  const selectedCanvas = paintedCanvases.find((canvas) => canvas.id === selectedCanvasId);
-
-  return <div className="site-shell min-h-screen text-white"><Header /><main className="mx-auto max-w-7xl px-6 pb-24 pt-36 sm:pt-44"><div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end"><div><p className="eyebrow">Community exhibition</p><h1 className="mt-4 font-[family-name:var(--font-pixelify-sans)] text-5xl font-bold sm:text-6xl">The garden is<br /><span className="text-[#a8f85b]">growing.</span></h1></div><p className="max-w-sm leading-relaxed text-slate-400">Support completed canvases with GLEE. Each tip is split equally between the painter and the current canvas owner.</p></div>
-    {(supplyLoading || canvasesLoading) && <p className="mt-12 text-slate-400">Loading the exhibition…</p>}
-    {!supplyLoading && !canvasesLoading && paintedCanvases.length === 0 && <div className="mt-12 border border-white/15 bg-[#0b1422] p-10 text-center"><p className="font-[family-name:var(--font-pixelify-sans)] text-2xl">No completed canvases yet.</p><p className="mt-3 text-slate-400">The first GLEE artwork will appear here when it is finished.</p></div>}
-    <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{paintedCanvases.map((canvas, index) => { const svg = svgResults[index]?.status === "success" ? svgResults[index].result as string : ""; return <button key={canvas.id.toString()} onClick={() => setSelectedCanvasId(canvas.id)} className="group overflow-hidden border border-white/15 bg-[#0b1422] text-left transition hover:-translate-y-1 hover:border-[#a8f85b]"><div className="aspect-square bg-white p-5" dangerouslySetInnerHTML={{ __html: svg }} /><div className="p-5"><p className="text-xs text-[#a8f85b]">CANVAS #{canvas.id.toString()}</p><h2 className="mt-2 font-[family-name:var(--font-pixelify-sans)] text-2xl">{canvas.artwork.title || "Untitled canvas"}</h2><p className="mt-2 line-clamp-2 text-sm text-slate-400">{canvas.artwork.description || "A GLEE creation."}</p><p className="mt-4 text-sm text-[#f8d65d]">{canvas.amountReceivedOnTips.toString()} GLEE received</p></div></button>; })}</div>
-    {selectedCanvas && <div className="fixed inset-0 z-[60] grid place-items-center bg-black/75 p-4"><div className="studio-panel w-full max-w-md p-6"><div className="flex items-start justify-between gap-4"><div><p className="eyebrow">Canvas #{selectedCanvas.id.toString()}</p><h2 className="mt-2 font-[family-name:var(--font-pixelify-sans)] text-3xl">{selectedCanvas.artwork.title || "Untitled canvas"}</h2></div><button onClick={() => setSelectedCanvasId(null)} aria-label="Close tip dialog" className="text-2xl text-slate-400 hover:text-white">×</button></div><p className="mt-4 text-slate-400">{selectedCanvas.artwork.description || "A GLEE creation."}</p><TipCanvas canvasId={selectedCanvas.id} /></div></div>}
-  </main></div>;
-}
-  --------------------------
-
-
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -42,6 +6,8 @@ import { formatUnits } from "viem";
 import Header from "@/components/Header/Header";
 import TipCanvas from "@/components/TipCanvas/TipCanvas";
 import GleeTokenNotice from "@/components/GleeTokenNotice/GleeTokenNotice";
+import { useToast } from "@/components/Toast/ToastProvider";
+import { canvasShareUrl } from "@/utils/siteConfig";
 import { useReadContract, useReadContracts } from "wagmi";
 import { GLEE_CONTRACT_ADDRESS, pixelatedDelightsABI } from "../../utils/contractAbi";
 
@@ -75,8 +41,30 @@ const cardVariants: Variants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
 };
 
-export default function Gallery() {
-  const [selectedCanvasId, setSelectedCanvasId] = useState<bigint | null>(null);
+function ShareIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v12m0-12l-4 4m4-4l4 4M5 13v6a2 2 0 002 2h10a2 2 0 002-2v-6" />
+    </svg>
+  );
+}
+
+interface GalleryViewProps {
+  /** Pre-selects a canvas so its detail modal is already open on first render — used when
+   * landing on a shared /gallery/[id] link. Left undefined for the plain /gallery route. */
+  initialCanvasId?: string;
+}
+
+export default function GalleryView({ initialCanvasId }: GalleryViewProps) {
+  const [selectedCanvasId, setSelectedCanvasId] = useState<bigint | null>(() => {
+    try {
+      return initialCanvasId ? BigInt(initialCanvasId) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const { pushToast } = useToast();
 
   const { data: totalSupply = BigInt(0), isPending: supplyLoading } = useReadContract({
     address: GLEE_CONTRACT_ADDRESS,
@@ -141,6 +129,30 @@ export default function Gallery() {
     if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
   }, []);
 
+  const handleShare = useCallback(async (canvasId: bigint, title: string) => {
+    const url = canvasShareUrl(canvasId.toString());
+    const shareData = { title: `${title || "Untitled canvas"} — GLEE`, text: "Check out this canvas on GLEE", url };
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (error) {
+        // AbortError just means the person closed the native share sheet — not a failure.
+        if ((error as { name?: string })?.name !== "AbortError") {
+          pushToast({ title: "Couldn't open share sheet", description: "Copy the link instead.", variant: "error" });
+        }
+      }
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      pushToast({ title: "Link copied", description: url, variant: "success" });
+    } catch {
+      pushToast({ title: "Couldn't copy link", description: url, variant: "error" });
+    }
+  }, [pushToast]);
+
   return (
     <div className="site-shell min-h-screen text-[var(--foreground)]">
       <Header />
@@ -157,10 +169,12 @@ export default function Gallery() {
               The garden is <span className="text-[var(--accent)]">growing.</span>
             </h1>
           </div>
-          <p className="max-w-sm text-sm leading-relaxed text-[var(--foreground-muted)]">
-            Support completed canvases with GLEE. Each tip is split equally between the painter and the current canvas owner.
-          </p>
-          <GleeTokenNotice variant="inline" className="mt-2" />
+          <div className="max-w-sm">
+            <p className="text-sm leading-relaxed text-[var(--foreground-muted)]">
+              Support completed canvases with GLEE. Each tip is split equally between the painter and the current canvas owner.
+            </p>
+            <GleeTokenNotice variant="inline" className="mt-2" />
+          </div>
         </motion.div>
 
         {(supplyLoading || canvasesLoading) && (
@@ -202,14 +216,25 @@ export default function Gallery() {
                 </div>
                 <div className="flex items-center justify-between border-t border-[var(--border-hairline)] px-5 py-3">
                   <p className="text-sm text-[var(--accent)]">{formatTipTotal(canvas.amountReceivedOnTips, tipDecimals)} GLEE received</p>
-                  <motion.button
-                    whileHover={{ y: -1 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => setSelectedCanvasId(canvas.id)}
-                    className="quiet-button px-3 py-1.5 text-xs"
-                  >
-                    Tip
-                  </motion.button>
+                  <div className="flex items-center gap-2">
+                    <motion.button
+                      whileHover={{ y: -1 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => handleShare(canvas.id, canvas.artwork.title)}
+                      aria-label="Share this canvas"
+                      className="quiet-button px-2.5 py-1.5"
+                    >
+                      <ShareIcon />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ y: -1 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => setSelectedCanvasId(canvas.id)}
+                      className="quiet-button px-3 py-1.5 text-xs"
+                    >
+                      Tip
+                    </motion.button>
+                  </div>
                 </div>
               </motion.div>
             );
@@ -238,13 +263,22 @@ export default function Gallery() {
                       {selectedCanvas.artwork.title || "Untitled canvas"}
                     </h2>
                   </div>
-                  <button
-                    onClick={closeLightbox}
-                    aria-label="Close tip dialog"
-                    className="text-2xl text-[var(--foreground-muted)] hover:text-[var(--foreground)]"
-                  >
-                    ×
-                  </button>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <button
+                      onClick={() => handleShare(selectedCanvas.id, selectedCanvas.artwork.title)}
+                      aria-label="Share this canvas"
+                      className="text-[var(--foreground-muted)] hover:text-[var(--foreground)]"
+                    >
+                      <ShareIcon />
+                    </button>
+                    <button
+                      onClick={closeLightbox}
+                      aria-label="Close tip dialog"
+                      className="text-2xl leading-none text-[var(--foreground-muted)] hover:text-[var(--foreground)]"
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
                 <p className="mt-4 text-sm text-[var(--foreground-muted)]">{selectedCanvas.artwork.description || "A GLEE creation."}</p>
                 <TipCanvas canvasId={selectedCanvas.id} onTipSuccess={handleTipSuccess} />
@@ -255,28 +289,4 @@ export default function Gallery() {
       </main>
     </div>
   );
-}
-*/
-
-import type { Metadata } from "next";
-import GalleryView from "@/components/GalleryView/GalleryView";
-import { SITE_URL } from "@/utils/siteConfig";
-
-export const metadata: Metadata = {
-  title: "Gallery — GLEE",
-  description: "Browse the community's onchain pixel art and support the pieces you love with $GLEE.",
-  openGraph: {
-    title: "Gallery — GLEE",
-    description: "Browse the community's onchain pixel art and support the pieces you love with $GLEE.",
-    url: `${SITE_URL}/gallery`,
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Gallery — GLEE",
-    description: "Browse the community's onchain pixel art and support the pieces you love with $GLEE.",
-  },
-};
-
-export default function GalleryPage() {
-  return <GalleryView />;
 }
