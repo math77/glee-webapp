@@ -1,6 +1,5 @@
 import "server-only";
 import { createPublicClient, http } from "viem";
-
 import { baseSepolia, BASE_SEPOLIA_RPC_URL } from "./chain";
 import { pixelatedDelightsABI, PIXELATED_DELIGHTS_CONTRACT_ADDRESS } from "./contractAbi";
 
@@ -60,51 +59,81 @@ interface ParsedRect {
 }
 
 function parseRectsFromSvg(svg: string): ParsedRect[] {
-  const rectTags = svg.match(/<rect[^>]*\/?>/g) ?? [];
+  const rectTags = svg.match(/<rect\b[^>]*\/?>/gi) ?? [];
   const rects: ParsedRect[] = [];
 
   for (const tag of rectTags) {
     const attrs: Record<string, string> = {};
-    const attrRegex = /([\w-]+)=["']([^"']*)["']/g;
+    const attrRegex = /([\w-]+)\s*=\s*["']([^"']*)["']/g;
     let match: RegExpExecArray | null;
     while ((match = attrRegex.exec(tag))) {
-      attrs[match[1]] = match[2];
+      attrs[match[1].toLowerCase()] = match[2];
     }
-    if (attrs.fill && attrs.x !== undefined && attrs.y !== undefined) {
-      rects.push({
-        x: parseFloat(attrs.x),
-        y: parseFloat(attrs.y),
-        width: parseFloat(attrs.width ?? "0"),
-        height: parseFloat(attrs.height ?? "0"),
-        fill: attrs.fill,
-      });
+
+    const fill = attrs.fill;
+    const width = attrs.width;
+    const height = attrs.height;
+    // A percentage (or missing) width/height can't be a uniform grid cell — skip rather
+    // than let parseFloat silently coerce "100%" into 100 and corrupt the size comparison.
+    const isPixelValue = (value?: string) => value !== undefined && !value.trim().endsWith("%") && Number.isFinite(parseFloat(value));
+
+    // Position can arrive as plain x/y attributes, or as transform="translate(x,y)" —
+    // both are common in generated SVG, and skipping whichever one a rect actually uses
+    // would silently drop it from the parsed set rather than just placing it wrong.
+    let x = attrs.x !== undefined ? parseFloat(attrs.x) : undefined;
+    let y = attrs.y !== undefined ? parseFloat(attrs.y) : undefined;
+    if ((x === undefined || y === undefined) && attrs.transform) {
+      const translateMatch = attrs.transform.match(/translate\(\s*([-\d.]+)[,\s]+([-\d.]+)\s*\)/);
+      if (translateMatch) {
+        x = x ?? parseFloat(translateMatch[1]);
+        y = y ?? parseFloat(translateMatch[2]);
+      }
     }
+
+    if (!fill || x === undefined || y === undefined || Number.isNaN(x) || Number.isNaN(y) || !isPixelValue(width) || !isPixelValue(height)) continue;
+
+    rects.push({ x, y, width: parseFloat(width!), height: parseFloat(height!), fill });
   }
   return rects;
 }
 
-// Reconstructs a 9x9 grid of fill colors from the contract's generated SVG. Computed
-// proportionally from the rects' own bounding box rather than assuming a fixed pixel size,
-// so it isn't tied to exactly how the contract happens to size each cell. The single rect
-// that covers (most of) the whole canvas is treated as the background, not a pixel.
+// Reconstructs a 9x9 grid of fill colors from the contract's generated SVG.
+//
+// This deliberately does NOT compute cell size from the overall bounding box of every rect
+// (background included) — that was the original approach, and it broke: a background rect
+// that doesn't use plain matching pixel dimensions (a percentage width, a size that doesn't
+// exactly equal 9 cells, extra chrome around the grid, etc.) throws off the scale factor for
+// every single cell, not just the edge, since every position is computed proportionally
+// against that bounding box.
+//
+// Instead: the individual pixel cells vastly outnumber any other rect (up to 81 of them vs.
+// realistically one background), so whatever width appears most often is almost certainly one
+// cell's width. Filtering down to only rects matching that size before computing positions
+// means a differently-sized background rect simply gets excluded, rather than corrupting the
+// scale for everything else.
 export function buildColorGridFromSvg(svg: string, gridSize = 9): (string | null)[] {
   const grid: (string | null)[] = new Array(gridSize * gridSize).fill(null);
-  const rects = parseRectsFromSvg(svg);
+  const rects = parseRectsFromSvg(svg).filter((r) => r.width > 0 && r.height > 0);
   if (rects.length === 0) return grid;
 
-  const minX = Math.min(...rects.map((r) => r.x));
-  const minY = Math.min(...rects.map((r) => r.y));
-  const maxX = Math.max(...rects.map((r) => r.x + r.width));
-  const maxY = Math.max(...rects.map((r) => r.y + r.height));
-  const spanX = maxX - minX || 1;
-  const spanY = maxY - minY || 1;
-  const cellWidth = spanX / gridSize;
-  const cellHeight = spanY / gridSize;
-
+  const sizeCounts = new Map<number, number>();
   for (const rect of rects) {
-    if (rect.width >= spanX * 0.9 && rect.height >= spanY * 0.9) continue; // background rect
-    const col = Math.min(gridSize - 1, Math.max(0, Math.round((rect.x - minX) / cellWidth)));
-    const row = Math.min(gridSize - 1, Math.max(0, Math.round((rect.y - minY) / cellHeight)));
+    // Round to the nearest pixel so trivial floating-point differences don't split what's
+    // really the same cell size into separate buckets.
+    const key = Math.round(rect.width);
+    sizeCounts.set(key, (sizeCounts.get(key) ?? 0) + 1);
+  }
+  const [cellSize] = [...sizeCounts.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0];
+
+  const cellRects = rects.filter((r) => Math.abs(r.width - cellSize) < 1 && Math.abs(r.height - cellSize) < 1);
+  if (cellRects.length === 0) return grid;
+
+  const minX = Math.min(...cellRects.map((r) => r.x));
+  const minY = Math.min(...cellRects.map((r) => r.y));
+
+  for (const rect of cellRects) {
+    const col = Math.min(gridSize - 1, Math.max(0, Math.round((rect.x - minX) / cellSize)));
+    const row = Math.min(gridSize - 1, Math.max(0, Math.round((rect.y - minY) / cellSize)));
     grid[row * gridSize + col] = rect.fill;
   }
 
