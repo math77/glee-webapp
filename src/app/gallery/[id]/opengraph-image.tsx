@@ -47,6 +47,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
 
     const grid = buildColorGridFromSvg(canvas.svg, GRID_SIZE);
     const gridPixels = GRID_SIZE * CELL;
+    const rows = Array.from({ length: GRID_SIZE }, (_, row) => grid.slice(row * GRID_SIZE, row * GRID_SIZE + GRID_SIZE));
 
     return new ImageResponse(
       (
@@ -65,23 +66,27 @@ export default async function Image({ params }: { params: Promise<{ id: string }
           <div
             style={{
               display: "flex",
-              flexWrap: "wrap",
+              flexDirection: "column",
               width: gridPixels,
               height: gridPixels,
               background: PAPER,
               border: `1px solid ${FOREGROUND_MUTED}`,
             }}
           >
-            {grid.map((fill, index) => (
-              <div
-                key={index}
-                style={{
-                  display: "flex",
-                  width: CELL,
-                  height: CELL,
-                  background: fill ?? PAPER,
-                }}
-              />
+            {rows.map((rowCells, rowIndex) => (
+              <div key={rowIndex} style={{ display: "flex", flexDirection: "row" }}>
+                {rowCells.map((fill, colIndex) => (
+                  <div
+                    key={colIndex}
+                    style={{
+                      display: "flex",
+                      width: CELL,
+                      height: CELL,
+                      background: fill ?? PAPER,
+                    }}
+                  />
+                ))}
+              </div>
             ))}
           </div>
           <div style={{ display: "flex", flexDirection: "column", maxWidth: 480 }}>
