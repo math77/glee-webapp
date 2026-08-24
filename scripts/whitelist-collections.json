@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Chain Mancers",
+    "chain": "robinhood-mainnet",
+    "contract": "0x797a2e030b7e49107c8f07bf0300ea9cae88ca57"
+  },
+  {
+    "name": "RH Machines",
+    "chain": "robinhood-mainnet",
+    "contract": "0x8c71d170fbd94bcba93bb08fc2cfd0e8620cd9ce"
+  },
+  {
+    "name": "Chain Raiders",
+    "chain": "robinhood-mainnet",
+    "contract": "0xe015961fb36d99bca8592ba048f9c46983c63e8a"
+  },
+  {
+    "name": "Quotrons",
+    "chain": "robinhood-mainnet",
+    "contract": "0x027aca2794e44f24950d81227dcd516ffbb49d6e"
+  }
+]

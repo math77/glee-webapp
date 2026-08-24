@@ -44,6 +44,7 @@
  */
 
 import dotenv from "dotenv";
+import path from "path";
 import { join } from "path";
 import { createClient } from "@supabase/supabase-js";
 import {
@@ -63,8 +64,9 @@ import { readFileSync, writeFileSync, mkdirSync } from "fs";
 // resolved to a directory ABOVE the project, and to a different filename
 // than the .env you're actually using. Plain dotenv.config() below loads
 // .env from cwd, matching your working setup.
-dotenv.config();
+//dotenv.config();
 
+dotenv.config({ path: path.resolve(process.cwd(), './.env.local') });
 /* -------------------------------------------------------------------------- */
 /* Paths                                                                      */
 /* -------------------------------------------------------------------------- */
@@ -588,10 +590,10 @@ async function main() {
   );
 
   const supabaseUrl =
-    process.env.SUPABASE_URL;
+    process.env.SUPABASE_URL_PROD;
 
   const serviceRoleKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY;
+    process.env.SUPABASE_SERVICE_ROLE_KEY_PROD;
 
   if (
     !supabaseUrl ||
