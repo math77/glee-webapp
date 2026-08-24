@@ -1,5 +1,4 @@
 /*
-
 "use client"
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -13,7 +12,7 @@ import { simulateContract } from '@wagmi/core';
 import { createConfig } from '@wagmi/core';
 import { http } from '@wagmi/core';
 import { injected } from '@wagmi/core';
-import { baseSepolia, BASE_SEPOLIA_RPC_URL } from '../../../utils/chain';
+import { baseSepolia, BASE_SEPOLIA_RPC_URL } from '../../utils/chain';
 
 import Header from '../Header/Header';
 import ColorCanvas from '../ColorCanvas/ColorCanvas';
@@ -24,9 +23,12 @@ import useBackgroundMusic from '@/hooks/useBackgroundMusic';
 
 import { CanvasData } from '@/types';
 
-import { convertCanvasForContractArtwork } from '../../../utils/swissknife';
-import { pixelatedDelightsABI, PIXELATED_DELIGHTS_CONTRACT_ADDRESS } from '../../../utils/contractAbi';
+import { convertCanvasForContractArtwork } from '../../utils/swissknife';
+import { pixelatedDelightsABI, PIXELATED_DELIGHTS_CONTRACT_ADDRESS } from '../../utils/contractAbi';
+
 import MintCanvas from '../MintCanvas/MintCanvas';
+import { NFT_MINT_LAUNCHED, NFT_NOT_LAUNCHED_MESSAGE } from '../../utils/nftLaunch';
+import Link from 'next/link';
 
 interface EmojiTownMainPageProps {
   userAddress: Address;
@@ -158,7 +160,7 @@ const ColorTownCreate: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
     setColorPageIndex((prevIndex) => (prevIndex - 1 + totalPages) % totalPages);
   };
 
-  const handleCanvasSelect = (canvasId: string, canvasData: CanvasData) => {
+  const handleCanvasSelect = useCallback((canvasId: string, canvasData: CanvasData) => {
     setCurrentCanvasId(canvasId);
     setSelectedCanvasData(canvasData);
     setTitle(canvasData.title || '');
@@ -171,7 +173,7 @@ const ColorTownCreate: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
     } else {
       setDisplayedSvgData(null);
     }
-  };
+  }, []);
 
   const handleColorSelect = (color: { id: number, color: string, name: string }) => {
     setSelectedColor(color.color);
@@ -591,6 +593,33 @@ const ColorTownCreate: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
     ? `No. ${selectedCanvasData.networkId}`
     : 'Unminted preview';
 
+  
+  if (!NFT_MINT_LAUNCHED) {
+    return (
+      <div className="site-shell flex min-h-screen flex-col text-[var(--foreground)]">
+        <Header
+          toggleMusic={backgroundMusic.toggleMute}
+          isMusicMuted={backgroundMusic.isMuted}
+          isMusicPlaying={backgroundMusic.isPlaying}
+        />
+        <main className="mx-auto flex max-w-2xl flex-1 flex-col items-center justify-center px-6 pt-24 text-center">
+          <p className="eyebrow-quiet">Coming soon</p>
+          <h1 className="mt-5 font-[family-name:var(--font-fraunces)] text-4xl italic leading-tight text-[var(--foreground)] sm:text-5xl">
+            The studio isn&apos;t open yet.
+          </h1>
+          <p className="mt-5 max-w-md leading-relaxed text-[var(--foreground-muted)]">
+            {NFT_NOT_LAUNCHED_MESSAGE}
+          </p>
+          <Link href="/about">
+            <motion.span whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }} className="quiet-button quiet-button--filled mt-8 inline-flex px-6 py-3 text-sm">
+              Learn about $GLEE
+            </motion.span>
+          </Link>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="site-shell min-h-screen flex flex-col font-[family-name:var(--font-geist-sans)] text-[var(--foreground)]">
       <Header
@@ -705,7 +734,7 @@ const ColorTownCreate: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
               disabled={!currentCanvasId || isCurrentCanvasFinished}
             />
           </div>
-          {/* Color palette *&/}
+          {/* Color palette *$/}
           <div className="studio-panel p-4">
             <h2 className="studio-label mb-4">Palette</h2>
             <div className="grid grid-cols-4 gap-3">
@@ -740,7 +769,7 @@ const ColorTownCreate: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
               </div>
             )}
           </div>
-          {/* Action buttons *7/}
+          {/* Action buttons *$/}
           <div className="studio-panel p-4">
             <div className="grid grid-cols-2 gap-2">
               <motion.button
@@ -779,7 +808,7 @@ const ColorTownCreate: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
         </motion.aside>
       </main>
       
-      {/* Modals *7/}
+      {/* Modals *$/}
       <AnimatePresence>
         {eraseModalOpen && (
           <motion.div
@@ -837,7 +866,7 @@ const ColorTownCreate: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
                   </svg>
                 </button>
               </div>
-              <MintCanvas basePrice={0.0011} onMintSuccess={handleMintSuccess} />
+              <MintCanvas onMintSuccess={handleMintSuccess} />
             </motion.div>
           </motion.div>
         )}
@@ -851,7 +880,7 @@ export default ColorTownCreate;
 
 "use client"
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Address } from 'viem';
 import { 
@@ -929,7 +958,7 @@ const ColorTownCreate: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
   // effects were dropped along with the arcade direction.
   const backgroundMusic = useBackgroundMusic('/sounds/bluedanube.mp3', { volume: 0.2 });
 
-  const { data: hash, isPending, writeContract } = useWriteContract();
+  const { data: hash, isPending, writeContract, reset: resetWriteContract } = useWriteContract();
 
   const canvasRef = useRef<ColorCanvasRef>(null);
   const isMounted = useRef(false);
@@ -953,15 +982,18 @@ const ColorTownCreate: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
     { id: 7, color: '#FC7A1E', name: 'Amber' }
   ];
 
-  // Create config for contract calls
-  const config = createConfig({
+  // Memoized so this is created once per mount, not on every render — this component
+  // re-renders constantly while painting, and re-instantiating injected() each time meant
+  // simulateContract() could run against a connector that hadn't finished its own async
+  // network detection yet, which is what "could not detect network" was coming from.
+  const config = useMemo(() => createConfig({
     chains: [baseSepolia],
     connectors: [injected()],
     ssr: true,
     transports: {
       [baseSepolia.id]: http(BASE_SEPOLIA_RPC_URL)
     }
-  });
+  }), []);
 
   // Color picker carousel configuration
   const colorsPerPage = 12;
@@ -1073,7 +1105,13 @@ const ColorTownCreate: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
   // Modify the mintCanvasAsSingleNFT function
   const mintCanvasAsSingleNFT = async () => {
     setIsSaveLoading(true);
-    
+
+    // Clear any hash/state left over from a previous save. Without this, hash still held
+    // the LAST transaction's (already-confirmed) hash while this new one waited on the
+    // wallet, and the effect below would see that stale hash + its real "confirmed" result
+    // and mark THIS save complete before it had even been sent.
+    resetWriteContract();
+
     try {
       const { title, description, colorPlacements } = await getCanvasData();
 
