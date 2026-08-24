@@ -1716,7 +1716,7 @@ const ColorTownCreate: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
                   </svg>
                 </button>
               </div>
-              <MintCanvas basePrice={0.0011} onMintSuccess={handleMintSuccess} />
+              <MintCanvas onMintSuccess={handleMintSuccess} />
             </motion.div>
           </motion.div>
         )}

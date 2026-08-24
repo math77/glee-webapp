@@ -248,7 +248,7 @@ export default function Home() {
                   <Pending className="animate-spin" />
                 </div>
               ) : (
-                <MintCanvas basePrice={0.0011} />
+                <MintCanvas />
               )}
             </div>
           </div>
