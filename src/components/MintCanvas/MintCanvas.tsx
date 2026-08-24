@@ -962,6 +962,8 @@ export default function MintCanvas({ fallbackPriceEth = 0.003, onMintSuccess }: 
       <p className="mb-5 text-sm leading-relaxed text-[var(--foreground-muted)]">
         Whitelist and public mint run together from launch — you can mint either way from day one. Once the
         whitelist window closes, any unclaimed whitelist supply opens up to public mint too.
+
+        (TESTNET FOR NOW, DON'T TRY TO MINT :D)
       </p>
 
       {canUseWhitelist && (
