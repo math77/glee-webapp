@@ -972,13 +972,13 @@ export default function MintCanvas({ fallbackPriceEth = 0.003, onMintSuccess }: 
             onClick={() => setMode("whitelist")}
             className={`flex-1 py-2 transition-colors ${mode === "whitelist" ? "bg-[var(--accent)] text-white" : "text-[var(--foreground-muted)]"}`}
           >
-            Whitelist ({wlRemainingForMe !== undefined ? Number(wlRemainingForMe as bigint) : 0} left)
+            Whitelist ({wlRemainingForMe !== undefined ? Number(wlRemainingForMe as bigint) : 0} left for you)
           </button>
           <button
             onClick={() => setMode("public")}
             className={`flex-1 py-2 transition-colors ${mode === "public" ? "bg-[var(--accent)] text-white" : "text-[var(--foreground-muted)]"}`}
           >
-            Public
+            Public ({myPublicRemaining !== undefined ? Number(myPublicRemaining as bigint) : 0} left for you)
           </button>
         </div>
       )}
