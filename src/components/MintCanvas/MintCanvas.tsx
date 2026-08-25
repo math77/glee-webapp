@@ -1072,7 +1072,7 @@ export default function MintCanvas({ fallbackPriceEth = 0.003, onMintSuccess }: 
       {isConnected && isWlWindowActive && isOnWhitelist && !hasWlRemaining && (
         <p className="mt-3 text-sm text-[var(--foreground-muted)]">
           You&apos;ve already minted your full whitelist allocation. Public mint is still available if there&apos;s
-          supply left, or if you haven&apos;t reached your public per-wallet limit.
+          supply left, or if you haven&apos;t reached your public per-wallet limit of 20.
         </p>
       )}
       {hasInsufficientFundsError && <p className="mt-3 text-sm text-[#c17a72]">Insufficient funds for gas and mint price.</p>}

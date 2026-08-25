@@ -5,6 +5,7 @@ import Header from "@/components/Header/Header";
 import GleeTokenNotice from "@/components/GleeTokenNotice/GleeTokenNotice";
 import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
+import { LAUNCHPAD_NAME, LAUNCHPAD_URL } from "@/utils/gleeToken";
 
 const steps: [string, string, string][] = [
   ["01", "Mint a plot", "Claim one or more tiny canvases on Robinhood Chain."],
@@ -16,11 +17,6 @@ const tokenFeatures: [string, string][] = [
   ["Tip what moves you", "Every finished canvas in the gallery can receive $GLEE tips — a quiet way to say a piece is worth something to you."],
   ["Split with the owner", "Each tip is shared equally between the artist who painted the canvas and whoever holds it now, so support reaches the maker and the collector alike."],
 ];
-
-// TODO: fill in once the launchpad is chosen. LAUNCHPAD_URL stays "#" until then —
-// the button below renders disabled while it is.
-const LAUNCHPAD_NAME = "";
-const LAUNCHPAD_URL = "#";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 16 },
@@ -136,32 +132,35 @@ export default function About() {
     </div>
   );
 }
-*/
+  */
+
 
 "use client";
-
+ 
 import Header from "@/components/Header/Header";
 import GleeTokenNotice from "@/components/GleeTokenNotice/GleeTokenNotice";
 import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
 import { LAUNCHPAD_NAME, LAUNCHPAD_URL } from "@/utils/gleeToken";
-
+ 
 const steps: [string, string, string][] = [
   ["01", "Mint a plot", "Claim one or more tiny canvases on Robinhood Chain."],
   ["02", "Paint freely", "Make your mark using a focused eight-color palette."],
   ["03", "Grow the garden", "Share your work and discover the community's creations."],
 ];
-
+ 
+const whitelistCommunities = ["Chain Mancers", "RH Machines", "Chain Raiders", "Quotrons"];
+ 
 const tokenFeatures: [string, string][] = [
   ["Tip what moves you", "Every finished canvas in the gallery can receive $GLEE tips — a quiet way to say a piece is worth something to you."],
   ["Split with the owner", "Each tip is shared equally between the artist who painted the canvas and whoever holds it now, so support reaches the maker and the collector alike."],
 ];
-
+ 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 16 },
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
 };
-
+ 
 export default function About() {
   return (
     <div className="site-shell min-h-screen text-[var(--foreground)]">
@@ -180,7 +179,7 @@ export default function About() {
             GLEE is a collaborative, onchain art experiment. The constraint is the point: 81 pixels, eight colors, and your imagination.
           </motion.p>
         </motion.div>
-
+ 
         <motion.div
           initial="hidden"
           whileInView="show"
@@ -196,7 +195,43 @@ export default function About() {
             </motion.article>
           ))}
         </motion.div>
-
+ 
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="mt-24"
+        >
+          <p className="eyebrow-quiet">The whitelist</p>
+          <h2 className="mt-5 max-w-2xl font-[family-name:var(--font-fraunces)] text-4xl italic leading-tight text-[var(--foreground)] sm:text-5xl">
+            Whitelist and public,<br />minting together.
+          </h2>
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[var(--foreground-muted)]">
+            There&apos;s no separate phase — whitelisted or not, you can mint from the moment it opens. Whitelisted
+            wallets get a guaranteed allocation reserved just for them, at the same price as public mint. Once the
+            whitelist window closes, whatever&apos;s left of that reserved supply opens up to public mint too.
+          </p>
+          <p className="eyebrow-quiet mt-8">On the whitelist</p>
+          <motion.div
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-60px" }}
+            variants={{ show: { transition: { staggerChildren: 0.06 } } }}
+            className="mt-4 flex flex-wrap gap-3"
+          >
+            {whitelistCommunities.map((name) => (
+              <motion.span
+                key={name}
+                variants={fadeUp}
+                className="border border-[var(--border-hairline-strong)] px-4 py-2 text-sm text-[var(--foreground)]"
+              >
+                {name}
+              </motion.span>
+            ))}
+          </motion.div>
+        </motion.div>
+ 
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -213,7 +248,7 @@ export default function About() {
           </p>
           <GleeTokenNotice className="mt-6 max-w-2xl" />
         </motion.div>
-
+ 
         <motion.div
           initial="hidden"
           whileInView="show"
@@ -228,7 +263,7 @@ export default function About() {
             </motion.article>
           ))}
         </motion.div>
-
+ 
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -250,7 +285,7 @@ export default function About() {
             Get $GLEE ↗
           </a>
         </motion.div>
-
+ 
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
