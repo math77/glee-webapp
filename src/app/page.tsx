@@ -308,7 +308,8 @@ export default function Home() {
             </div>
           </div>
         </motion.section>
- 
+        
+        {/*
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -335,6 +336,7 @@ export default function Home() {
             </div>
           </div>
         </motion.section>
+        */}
  
         <motion.section
           initial={{ opacity: 0, y: 20 }}
