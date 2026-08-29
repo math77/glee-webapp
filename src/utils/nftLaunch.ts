@@ -1,6 +1,6 @@
 // Flip this to true once the NFT collection launches (a few days after $GLEE).
-// Every notice below, and the Studio gate in ColorTownCreate, reads this constant.
-export const NFT_MINT_LAUNCHED = true;
+// Every notice below, and the Studio gate in the Studio component, reads this constant.
+export const NFT_MINT_LAUNCHED = false;
 
 // Set this once a mint date is locked in, e.g. new Date("2026-09-01T17:00:00Z").
 // Leave it null until then — NFT_NOT_LAUNCHED_MESSAGE below falls back to generic

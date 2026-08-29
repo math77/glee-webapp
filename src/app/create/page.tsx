@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { Address } from "viem";
 
-import ColorTownCreate from "@/components/ColorTownCreate/ColorTownCreate";
+import Studio from "@/components/Studio/Studio";
 
 export default function Page() {
   const [mounted, setMounted] = useState<boolean>(false);
@@ -17,7 +17,7 @@ export default function Page() {
   }, []);
 
   return (
-    <ColorTownCreate
+    <Studio
       userAddress={userAddress as Address}
     />
   );
