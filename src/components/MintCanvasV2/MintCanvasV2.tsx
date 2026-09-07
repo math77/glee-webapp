@@ -6,7 +6,7 @@ import { formatEther } from "viem";
 import { useAccount, useReadContract, useSimulateContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { gleeV2ABI, GLEE_V2_CONTRACT_ADDRESS } from "@/utils/contractAbi";
 import { explorerTxUrl } from "@/utils/explorer";
-import { NFT_MAX_SUPPLY } from "@/utils/nftLaunch";
+import { NFT_MAX_SUPPLY, NFT_PUBLIC_SUPPLY } from "@/utils/nftLaunch";
 import { useToast } from "../Toast/ToastProvider";
 
 interface MintCanvasV2Props {
@@ -184,9 +184,9 @@ export default function MintCanvasV2({ fallbackPriceEth = 0.003, onMintSuccess }
   }, [error, pushToast]);
 
   const mintedCount = totalMintedSoFar !== undefined ? Number(totalMintedSoFar) : undefined;
-  const isSoldOut = mintedCount !== undefined && mintedCount >= NFT_MAX_SUPPLY;
-  const remaining = mintedCount !== undefined ? Math.max(NFT_MAX_SUPPLY - mintedCount, 0) : undefined;
-  const mintProgress = mintedCount !== undefined ? Math.min(mintedCount / NFT_MAX_SUPPLY, 1) : 0;
+  const isSoldOut = mintedCount !== undefined && mintedCount >= NFT_PUBLIC_SUPPLY;
+  const remaining = mintedCount !== undefined ? Math.max(NFT_PUBLIC_SUPPLY - mintedCount, 0) : undefined;
+  const mintProgress = mintedCount !== undefined ? Math.min(mintedCount / NFT_PUBLIC_SUPPLY, 1) : 0;
   const isNotOpenYet = isMintOpen === false;
   const isMintButtonDisabled = !isConnected || isPending || isSimulatePending || receipt.isLoading || isSoldOut || isNotOpenYet || hasInsufficientFundsError || mintSent || maxQuantity <= 0 || totalPriceWei === undefined;
 
@@ -203,6 +203,13 @@ export default function MintCanvasV2({ fallbackPriceEth = 0.003, onMintSuccess }
 
   return (
     <div>
+      <p className="mb-5 text-sm leading-relaxed text-[var(--foreground-muted)]">
+        Whitelist and public mint run together from launch — you can mint either way from day one. Once the
+        whitelist window closes, any unclaimed whitelist supply opens up to public mint too.
+
+        (TESTNET FOR NOW, DON'T TRY TO MINT :D)
+      </p>
+
       {canUseWhitelist && (
         <div className="mb-4 flex items-center gap-2 border border-[var(--border-hairline-strong)] p-1 text-xs font-[family-name:var(--font-geist-mono)]">
           <button onClick={() => setMode("whitelist")} className={`flex-1 py-2 transition-colors ${mode === "whitelist" ? "bg-[var(--accent)] text-white" : "text-[var(--foreground-muted)]"}`}>
@@ -239,7 +246,7 @@ export default function MintCanvasV2({ fallbackPriceEth = 0.003, onMintSuccess }
 
       <div className="mt-5 border-t border-[var(--border-hairline)] pt-4">
         <div className="h-1 w-full overflow-hidden bg-[var(--border-hairline)]"><motion.div className="h-full bg-[var(--accent)]" initial={{ width: 0 }} animate={{ width: `${mintProgress * 100}%` }} transition={{ duration: 0.4, ease: "easeOut" }} /></div>
-        <div className="mt-3 flex items-center justify-between font-[family-name:var(--font-geist-mono)] text-xs text-[var(--foreground-muted)]"><span>{mintedCount?.toLocaleString() ?? "—"} / {NFT_MAX_SUPPLY.toLocaleString()} minted</span><span>{remaining !== undefined ? `${remaining.toLocaleString()} remaining` : ""}</span></div>
+        <div className="mt-3 flex items-center justify-between font-[family-name:var(--font-geist-mono)] text-xs text-[var(--foreground-muted)]"><span>{mintedCount?.toLocaleString() ?? "—"} / {NFT_PUBLIC_SUPPLY.toLocaleString()} minted</span><span>{remaining !== undefined ? `${remaining.toLocaleString()} remaining` : ""}</span></div>
       </div>
 
       {!isConnected && <p className="mt-3 text-sm text-[var(--accent)]">Connect your wallet to mint.</p>}

@@ -9,7 +9,7 @@ import { formatEther } from "viem";
 import { useAccount, useReadContract, useSimulateContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { gleeABI, GLEE_CONTRACT_ADDRESS } from "../../utils/contractAbi";
 import { explorerTxUrl } from "../../utils/explorer";
-import { NFT_MAX_SUPPLY } from "../../utils/nftLaunch";
+import { NFT_PUBLIC_SUPPLY } from "../../utils/nftLaunch";
 import { useToast } from "../Toast/ToastProvider";
 
 interface MintCanvasProps {
@@ -265,7 +265,7 @@ export default function MintCanvas({ fallbackPriceEth = 0.003, onMintSuccess }: 
   /* --------------------------------- display ---------------------------------- *%/
 
   const mintedCount = totalMintedSoFar !== undefined ? Number(totalMintedSoFar as bigint) : undefined;
-  const displayMaxSupply = maxSupplyOnChain !== undefined ? Number(maxSupplyOnChain as bigint) : NFT_MAX_SUPPLY;
+  const displayMaxSupply = maxSupplyOnChain !== undefined ? Number(maxSupplyOnChain as bigint) : NFT_PUBLIC_SUPPLY;
   const mintProgress = mintedCount !== undefined ? Math.min(mintedCount / displayMaxSupply, 1) : 0;
   const isSoldOut = mintedCount !== undefined && mintedCount >= displayMaxSupply;
   const isNotOpenYet = isMintOpen === false;
@@ -633,7 +633,7 @@ import { formatEther } from "viem";
 import { useAccount, useReadContract, useSimulateContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { gleeABI, GLEE_CONTRACT_ADDRESS } from "../../utils/contractAbi";
 import { explorerTxUrl } from "../../utils/explorer";
-import { NFT_MAX_SUPPLY } from "../../utils/nftLaunch";
+import { NFT_MAX_SUPPLY, NFT_PUBLIC_SUPPLY } from "../../utils/nftLaunch";
 import { useToast } from "../Toast/ToastProvider";
 
 interface MintCanvasProps {
@@ -922,7 +922,7 @@ export default function MintCanvas({ fallbackPriceEth = 0.003, onMintSuccess }: 
   /* --------------------------------- display ---------------------------------- */
 
   const mintedCount = totalMintedSoFar !== undefined ? Number(totalMintedSoFar as bigint) : undefined;
-  const displayMaxSupply = maxSupplyOnChain !== undefined ? Number(maxSupplyOnChain as bigint) : NFT_MAX_SUPPLY;
+  const displayMaxSupply = maxSupplyOnChain !== undefined ? Number(maxSupplyOnChain as bigint) : NFT_PUBLIC_SUPPLY;
   const mintProgress = mintedCount !== undefined ? Math.min(mintedCount / displayMaxSupply, 1) : 0;
   const isSoldOut = mintedCount !== undefined && mintedCount >= displayMaxSupply;
   const isNotOpenYet = isMintOpen === false;

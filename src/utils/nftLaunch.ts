@@ -21,3 +21,4 @@ export const NFT_NOT_LAUNCHED_MESSAGE = NFT_MINT_DATE
 // The contract currently has no on-chain max-supply read to pull this from — hardcode it
 // here until one exists, so there's a single place to update when that changes.
 export const NFT_MAX_SUPPLY = 7777;
+export const NFT_PUBLIC_SUPPLY = 7677;
