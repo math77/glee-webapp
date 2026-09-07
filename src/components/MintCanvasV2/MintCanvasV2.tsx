@@ -91,7 +91,7 @@ export default function MintCanvasV2({ fallbackPriceEth = 0.003, onMintSuccess }
     return () => { cancelled = true; };
   }, [address]);
 
-  const isEligibleForWl = Boolean(whitelistStatus?.eligible) && wlRemainingForMe !== undefined && (wlRemainingForMe as bigint) > 0n;
+  const isEligibleForWl = Boolean(whitelistStatus?.eligible) && wlRemainingForMe !== undefined && (wlRemainingForMe as bigint) > BigInt(0);
   const canUseWhitelist = isWlWindowActive && isEligibleForWl;
 
   useEffect(() => {

@@ -23,14 +23,28 @@ const V2_BITS_PER_PIXEL = 4;
 const V2_PIXEL_MASK = BigInt(0x0F);
 const V2_SPLIT_INDEX = 64;
 
+
+// Indices 0-10 are UNCHANGED from what you already deployed and tested — do not reorder
+// these, the contract's COLOR_PALETTE array is fixed at these exact positions. New colors
+// are appended at the end (11-13) rather than inserted, which is why the gated set below
+// isn't a simple contiguous range.
 export const V2_COLOR_PALETTE: string[] = [
-  '#FFFFFF', '#06BA63', '#FFC0CB', '#FF0000', '#000000', '#0052FF', '#EAC70D',
-  '#FC7A1E', '#2E1D20', '#FA2FBA', '#8B1EC9', '#9B9B9B', '#12A5A0', '#C9A227',
+  '#FFFFFF', // 0  - Paper    (basic)
+  '#06BA63', // 1  - Emerald  (basic)
+  '#FFC0CB', // 2  - Blush    (basic)
+  '#FF0000', // 3  - Poppy    (basic)
+  '#000000', // 4  - Ink      (basic)
+  '#0052FF', // 5  - Cobalt   (basic)
+  '#EAC70D', // 6  - Gold     (basic)
+  '#FC7A1E', // 7  - Amber    (basic)
+  '#2E1D20', // 8  - Umber    ()
+  '#FA2FBA', // 9  - Orchid   ()
+  '#8B1EC9', // 10 - Amethyst ()
+  '#9B9B9B', // 11 - Stone    (basic) — new
+  '#12A5A0', // 12 - Teal     (basic) — new
+  '#C9A227', // 13 - Bullion  () — new
 ];
 
-// Deprecated compatibility exports. Colors are no longer token gated.
-export const V2_GATED_COLOR_INDICES: number[] = [];
-export const V2_GATED_COLOR_REQUIREMENTS: Record<number, number> = {};
 
 function setPixelV2(data: bigint, localIndex: number, colorIndex: number): bigint {
   const shift = BigInt(localIndex * V2_BITS_PER_PIXEL);

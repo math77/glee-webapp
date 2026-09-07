@@ -925,7 +925,7 @@ import useBackgroundMusic from '@/hooks/useBackgroundMusic';
 
 import { CanvasData } from '@/types';
 
-import { convertCanvasForContractArtworkV2, V2_COLOR_PALETTE, V2_GATED_COLOR_INDICES, V2_GATED_COLOR_REQUIREMENTS } from '../../utils/swissknife';
+import { convertCanvasForContractArtworkV2, V2_COLOR_PALETTE } from '../../utils/swissknife';
 import { gleeV2ABI, GLEE_V2_CONTRACT_ADDRESS } from '@/utils/contractAbi';
 
 import MintCanvasV2 from '../MintCanvasV2/MintCanvasV2';
@@ -1000,9 +1000,7 @@ const Studio: React.FC<StudioProps> = ({ userAddress }) => {
     id,
     color,
     name: V2_COLOR_NAMES[id] ?? `Color ${id}`,
-    gated: V2_GATED_COLOR_INDICES.includes(id),
   }));
-  const gatedColorCount = V2_GATED_COLOR_INDICES.length;
 
   // Memoized so this is created once per mount, not on every render — this component
   // re-renders constantly while painting, and re-instantiating injected() each time meant
@@ -1668,11 +1666,6 @@ const Studio: React.FC<StudioProps> = ({ userAddress }) => {
                         boxShadow: selectedColor === color.color ? '0 0 0 2px var(--background-2), 0 0 0 3px var(--accent)' : 'none',
                       }}
                     />
-                    {color.gated && (
-                      <span className="absolute -right-1 -top-1 grid h-3.5 w-3.5 place-items-center rounded-full bg-[var(--accent)] text-[8px] leading-none text-[var(--background)]" aria-hidden="true">
-                        ✦
-                      </span>
-                    )}
                   </span>
                   <span className="text-[10px] text-[var(--foreground-muted)]">{color.name}</span>
                 </button>
