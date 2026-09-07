@@ -925,7 +925,7 @@ import useBackgroundMusic from '@/hooks/useBackgroundMusic';
 
 import { CanvasData } from '@/types';
 
-import { convertCanvasForContractArtworkV2, V2_COLOR_PALETTE, V2_GATED_COLOR_INDICES, V2_GATED_COLOR_REQUIREMENTS, formatGleeAmount } from '../../utils/swissknife';
+import { convertCanvasForContractArtworkV2, V2_COLOR_PALETTE, V2_GATED_COLOR_INDICES, V2_GATED_COLOR_REQUIREMENTS } from '../../utils/swissknife';
 import { gleeV2ABI, GLEE_V2_CONTRACT_ADDRESS } from '@/utils/contractAbi';
 
 import MintCanvasV2 from '../MintCanvasV2/MintCanvasV2';
@@ -1649,15 +1649,11 @@ const Studio: React.FC<StudioProps> = ({ userAddress }) => {
           {/* Color palette */}
           <div className="studio-panel p-4">
             <h2 className="studio-label mb-2">Palette</h2>
-            <p className="mb-4 text-xs leading-relaxed text-[var(--foreground-muted)]">
-              {gatedColorCount} colors (marked <span className="text-[var(--accent)]">✦</span>) will require holding
-              $GLEE once gating goes live. Not enforced yet — every color is open to paint with for now.
-            </p>
             <div className="grid grid-cols-4 gap-3">
               {getCurrentPageColors().map((color) => (
                 <button
                   key={color.id}
-                  aria-label={`Select ${color.name}${color.gated ? ` (token-gated, requires ${formatGleeAmount(V2_GATED_COLOR_REQUIREMENTS[color.id])} GLEE, not yet enforced)` : ''}`}
+                  aria-label={`Select ${color.name}`}
                   onClick={() => handleColorSelect(color)}
                   className="group relative flex flex-col items-center gap-1.5"
                 >
@@ -1679,14 +1675,6 @@ const Studio: React.FC<StudioProps> = ({ userAddress }) => {
                     )}
                   </span>
                   <span className="text-[10px] text-[var(--foreground-muted)]">{color.name}</span>
-                  {color.gated && (
-                    <span
-                      role="tooltip"
-                      className="pointer-events-none absolute -top-9 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap border border-[var(--border-hairline-strong)] bg-[var(--background-2)] px-2 py-1 text-[10px] text-[var(--foreground)] opacity-0 shadow-sm transition-opacity duration-150 group-hover:opacity-100"
-                    >
-                      Requires {formatGleeAmount(V2_GATED_COLOR_REQUIREMENTS[color.id])} GLEE
-                    </span>
-                  )}
                 </button>
               ))}
             </div>
