@@ -85,7 +85,7 @@ const CanvasInventoryV2 = React.forwardRef<
             abi: gleeV2ABI,
             address: GLEE_V2_CONTRACT_ADDRESS,
             functionName: "getCanvasAsSVG",
-            args: [canvasFromContract.artwork.artData1, canvasFromContract.artwork.artData2],
+            args: [BigInt(canvassesIds[index])],
           }) as string;
         }
 
