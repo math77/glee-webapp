@@ -16,7 +16,7 @@ const cards: [string, string, string][] = [
   [
     "03",
     "The Savior",
-    "When the collection is close to dying, anyone can call the Savior function. It restores the NFTs' visuals to their original state, but the rescue comes with a price: the collection becomes soulbound and the NFTs can no longer be transferred.",
+    "When the collection is close to dying, anyone can call the Savior function. It restores the NFTs' visuals to their original state, but the rescue comes with a price: the collection becomes soulbound and the NFTs can no longer be transferred. (at least not until the next chapters...)",
   ],
 ];
 
