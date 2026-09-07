@@ -715,7 +715,7 @@ export default function MintCanvas({ fallbackPriceEth = 0.003, onMintSuccess }: 
   const { data: isMintOpen } = useReadContract({ ...contract, functionName: "openMint" });
   const { data: wlDeadline } = useReadContract({ ...contract, functionName: "wlDeadline" });
   const { data: onChainPrice } = useReadContract({ ...contract, functionName: "mintPrice" });
-  const { data: maxSupplyOnChain } = useReadContract({ ...contract, functionName: "MAX_SUPPLY" });
+  const { data: maxSupplyOnChain } = useReadContract({ ...contract, functionName: "PUBLIC_MAX_SUPPLY" });
 
   const { data: totalMintedSoFar, refetch: refetchTotalMinted } = useReadContract({ ...contract, functionName: "totalSupply" });
   const { data: publicAvailableOnChain, refetch: refetchPublicAvailable } = useReadContract({ ...contract, functionName: "publicAvailable" });

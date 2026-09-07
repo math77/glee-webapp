@@ -308,7 +308,7 @@ const CanvasInventory = React.forwardRef<
             abi: pixelatedDelightsABI,
             address: PIXELATED_DELIGHTS_CONTRACT_ADDRESS,
             functionName: "getCanvasAsSVG",
-            args: [canvasFromContract.artwork.artData],
+            args: [BigInt(canvassesIds[index])],
           }) as string;
         }
 
@@ -317,7 +317,7 @@ const CanvasInventory = React.forwardRef<
           title: canvasFromContract.artwork.title,
           description: canvasFromContract.artwork.description,
           canvas_id: Number(canvassesIds[index]),
-          token_uri: canvasFromContract.artwork.artData,
+          token_uri: canvasFromContract.artwork.artData1,
           user_wallet: userAddress,
           finished: canvasFromContract.painted,
           svgData: svgData
