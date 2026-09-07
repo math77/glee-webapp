@@ -856,7 +856,7 @@ const LegacyStudio: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
 };
 
 export default LegacyStudio;
-*/
+
 
 "use client"
 
@@ -1602,7 +1602,7 @@ const LegacyStudio: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
               disabled={!currentCanvasId || isCurrentCanvasFinished}
             />
           </div>
-          {/* Color palette */}
+          {/* Color palette *x/}
           <div className="studio-panel p-4">
             <h2 className="studio-label mb-4">Palette</h2>
             <div className="grid grid-cols-4 gap-3">
@@ -1637,7 +1637,7 @@ const LegacyStudio: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
               </div>
             )}
           </div>
-          {/* Action buttons */}
+          {/* Action buttons *x/}
           <div className="studio-panel p-4">
             <div className="grid grid-cols-2 gap-2">
               <motion.button
@@ -1676,7 +1676,7 @@ const LegacyStudio: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
         </motion.aside>
       </main>
       
-      {/* Modals */}
+      {/* Modals *x/}
       <AnimatePresence>
         {eraseModalOpen && (
           <motion.div
@@ -1744,3 +1744,4 @@ const LegacyStudio: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
 };
 
 export default LegacyStudio;
+*/

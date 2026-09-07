@@ -88,14 +88,14 @@ export default function GalleryView({ initialCanvasId }: GalleryViewProps) {
     () =>
       canvasResults.flatMap((result, index) => {
         if (result.status !== "success") return [];
-        const canvas = result.result as { amountReceivedOnTips: bigint; painted: boolean; artwork: { title: string; description: string; painter: string; artData: bigint } };
+        const canvas = result.result as { amountReceivedOnTips: bigint; painted: boolean; artwork: { title: string; description: string; painter: string; artData1: bigint; artData2: bigint } };
         return canvas.painted ? [{ id: canvasIds[index], ...canvas }] : [];
       }),
     [canvasIds, canvasResults]
   );
 
   const svgReads = useMemo(
-    () => paintedCanvases.map((canvas) => ({ address: GLEE_CONTRACT_ADDRESS, abi: pixelatedDelightsABI, functionName: "getCanvasAsSVG" as const, args: [canvas.artwork.artData] as const })),
+    () => paintedCanvases.map((canvas) => ({ address: GLEE_CONTRACT_ADDRESS, abi: pixelatedDelightsABI, functionName: "getCanvasAsSVG" as const, args: [canvas.id] as const })),
     [paintedCanvases]
   );
 

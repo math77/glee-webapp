@@ -876,7 +876,7 @@ const ColorTownCreate: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
 };
 
 export default ColorTownCreate;
-*/
+
 
 "use client"
 
@@ -1622,7 +1622,7 @@ const ColorTownCreate: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
               disabled={!currentCanvasId || isCurrentCanvasFinished}
             />
           </div>
-          {/* Color palette */}
+          {/* Color palette *a/}
           <div className="studio-panel p-4">
             <h2 className="studio-label mb-4">Palette</h2>
             <div className="grid grid-cols-4 gap-3">
@@ -1657,7 +1657,7 @@ const ColorTownCreate: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
               </div>
             )}
           </div>
-          {/* Action buttons */}
+          {/* Action buttons *a/}
           <div className="studio-panel p-4">
             <div className="grid grid-cols-2 gap-2">
               <motion.button
@@ -1696,7 +1696,7 @@ const ColorTownCreate: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
         </motion.aside>
       </main>
       
-      {/* Modals */}
+      {/* Modals *a/}
       <AnimatePresence>
         {eraseModalOpen && (
           <motion.div
@@ -1764,3 +1764,4 @@ const ColorTownCreate: React.FC<EmojiTownMainPageProps> = ({ userAddress }) => {
 };
 
 export default ColorTownCreate;
+*/
