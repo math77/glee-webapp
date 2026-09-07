@@ -49,7 +49,7 @@ const Header = ({ toggleMusic, isMusicMuted }: HeaderProps) => {
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between border border-[var(--border-hairline)] bg-[var(--background-2)]/85 px-4 py-3 backdrop-blur-md sm:px-5">
         <Link href="/" className="font-[family-name:var(--font-fraunces)] text-2xl italic tracking-tight text-[var(--foreground)] sm:text-3xl">
-          Glee<span className="text-[var(--accent)]">.</span>
+          Glee (NOW IN TESTNET)<span className="text-[var(--accent)]">.</span>
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex" aria-label="Main navigation">

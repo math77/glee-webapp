@@ -24,7 +24,7 @@ const useBackgroundMusic = (musicUrl: string, options: BackgroundMusicOptions = 
     setMusic(audioElement);
 
     // Load user preference from localStorage if available
-    const savedMuteState = localStorage.getItem('gleeMusicMuted') ?? localStorage.getItem('bydedMusicMuted');
+    const savedMuteState = localStorage.getItem('gleeMusicMuted');
     if (savedMuteState) {
       setIsMuted(savedMuteState === 'true');
     }
