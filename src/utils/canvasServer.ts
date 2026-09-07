@@ -35,7 +35,7 @@ export async function getCanvasForMetadata(id: string): Promise<CanvasMetadata |
       address: PIXELATED_DELIGHTS_CONTRACT_ADDRESS,
       abi: pixelatedDelightsABI,
       functionName: "getCanvasAsSVG",
-      args: [canvas.artwork.artData],
+      args: [canvasId],
     });
 
     return {
