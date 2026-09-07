@@ -5,88 +5,162 @@ import { motion, AnimatePresence } from "framer-motion";
 import { formatEther } from "viem";
 import { useAccount, useReadContract, useSimulateContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { gleeV2ABI, GLEE_V2_CONTRACT_ADDRESS } from "@/utils/contractAbi";
-
 import { explorerTxUrl } from "@/utils/explorer";
 import { NFT_MAX_SUPPLY } from "@/utils/nftLaunch";
-
 import { useToast } from "../Toast/ToastProvider";
 
-// V2 counterpart to MintCanvas.tsx, deliberately WITHOUT whitelist logic — I haven't
-// confirmed the V2 canvas contract has mintWhitelist/wlRemaining/etc. (my contractAbiV2.ts
-// doesn't include them), so this only wires up the plain mintCanvas path. If V2 does carry
-// its own whitelist mechanism, port the whitelist branch over from MintCanvas.tsx.
-
 interface MintCanvasV2Props {
-  /** Shown only before mintPrice() resolves on-chain — never used for the actual transaction. */
   fallbackPriceEth?: number;
   onMintSuccess?: () => void;
+}
+
+type MintMode = "whitelist" | "public";
+
+interface WhitelistStatus {
+  eligible: boolean;
+  proof: `0x${string}`[];
+}
+
+function formatCountdown(deadline: bigint | undefined) {
+  if (deadline === undefined) return "";
+  const secondsLeft = Number(deadline) - Math.floor(Date.now() / 1000);
+  if (secondsLeft <= 0) return "";
+  const hours = Math.floor(secondsLeft / 3600);
+  const minutes = Math.floor((secondsLeft % 3600) / 60);
+  const seconds = secondsLeft % 60;
+  let parts = "";
+  if (hours > 0) parts += `${hours}h `;
+  if (minutes > 0 || hours > 0) parts += `${minutes}m `;
+  parts += `${seconds}s`;
+  return parts;
 }
 
 const contract = { address: GLEE_V2_CONTRACT_ADDRESS, abi: gleeV2ABI } as const;
 
 export default function MintCanvasV2({ fallbackPriceEth = 0.003, onMintSuccess }: MintCanvasV2Props) {
   const [quantity, setQuantity] = useState(1);
+  const [mode, setMode] = useState<MintMode>("public");
   const [mintSent, setMintSent] = useState(false);
+  const [whitelistStatus, setWhitelistStatus] = useState<WhitelistStatus | null>(null);
+  const [countdown, setCountdown] = useState("");
   const mintProcessedRef = useRef(false);
   const lastErrorRef = useRef<unknown>(null);
   const mintResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { pushToast } = useToast();
-  const { isConnected } = useAccount();
+  const { address, isConnected } = useAccount();
 
+  const { data: isMintOpen } = useReadContract({ ...contract, functionName: "openMint" });
+  const { data: wlDeadline } = useReadContract({ ...contract, functionName: "wlDeadline" });
   const { data: onChainPrice } = useReadContract({ ...contract, functionName: "mintPrice" });
+  const { data: totalMintedSoFar, refetch: refetchTotalMinted } = useReadContract({ ...contract, functionName: "totalSupply" });
+  const { data: publicAvailableOnChain, refetch: refetchPublicAvailable } = useReadContract({ ...contract, functionName: "publicAvailable" });
+  const { data: publicWalletCap } = useReadContract({ ...contract, functionName: "publicWalletCap" });
+  const { data: publicMintedByMe, refetch: refetchPublicMintedByMe } = useReadContract({
+    ...contract,
+    functionName: "publicMinted",
+    args: address ? [address] : undefined,
+    query: { enabled: Boolean(address) },
+  });
+  const { data: wlRemainingForMe, refetch: refetchWlRemaining } = useReadContract({
+    ...contract,
+    functionName: "wlRemaining",
+    args: address ? [address] : undefined,
+    query: { enabled: Boolean(address) },
+  });
+
+  const isWlWindowActive = Boolean(isMintOpen) && wlDeadline !== undefined && BigInt(Math.floor(Date.now() / 1000)) < (wlDeadline as bigint);
+
+  useEffect(() => {
+    const tick = () => setCountdown(formatCountdown(wlDeadline as bigint | undefined));
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [wlDeadline]);
+
+  useEffect(() => {
+    if (!address) {
+      setWhitelistStatus(null);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/whitelist?address=${address}`)
+      .then((res) => res.json())
+      .then((data: WhitelistStatus) => { if (!cancelled) setWhitelistStatus(data); })
+      .catch(() => { if (!cancelled) setWhitelistStatus({ eligible: false, proof: [] }); });
+    return () => { cancelled = true; };
+  }, [address]);
+
+  const isEligibleForWl = Boolean(whitelistStatus?.eligible) && wlRemainingForMe !== undefined && (wlRemainingForMe as bigint) > 0n;
+  const canUseWhitelist = isWlWindowActive && isEligibleForWl;
+
+  useEffect(() => {
+    setMode(canUseWhitelist ? "whitelist" : "public");
+  }, [canUseWhitelist]);
+
+  const myPublicRemaining = publicWalletCap !== undefined && publicMintedByMe !== undefined
+    ? (publicWalletCap as bigint) - (publicMintedByMe as bigint)
+    : undefined;
+
+  const maxQuantity = mode === "whitelist"
+    ? (wlRemainingForMe !== undefined ? Number(wlRemainingForMe as bigint) : 0)
+    : (() => {
+        const personalCap = myPublicRemaining !== undefined ? Number(myPublicRemaining) : undefined;
+        const globalCap = publicAvailableOnChain !== undefined ? Number(publicAvailableOnChain as bigint) : undefined;
+        const caps = [personalCap, globalCap].filter((n): n is number => n !== undefined);
+        return caps.length ? Math.max(Math.min(...caps), 0) : 0;
+      })();
+
+  useEffect(() => {
+    setQuantity((q) => Math.min(Math.max(q, 1), Math.max(maxQuantity, 1)));
+  }, [maxQuantity]);
+
   const priceWei = onChainPrice as bigint | undefined;
   const totalPriceWei = priceWei !== undefined ? priceWei * BigInt(quantity) : undefined;
   const displayPriceEth = priceWei !== undefined ? Number(formatEther(priceWei)) * quantity : fallbackPriceEth * quantity;
   const formattedPrice = displayPriceEth >= 1 ? displayPriceEth.toFixed(1) : displayPriceEth.toFixed(4);
 
   const { data: hash, error, isPending, writeContract } = useWriteContract();
+  const canSimulate = isConnected && isMintOpen === true && totalPriceWei !== undefined && maxQuantity > 0;
 
-  const { data: totalMintedSoFar, refetch: refetchTotalMinted } = useReadContract({
+  const { error: simulateWhitelistError, isPending: isSimulatingWhitelist } = useSimulateContract({
     ...contract,
-    functionName: "totalSupply",
+    functionName: "mintWhitelist",
+    args: whitelistStatus ? [BigInt(quantity), whitelistStatus.proof] : undefined,
+    value: totalPriceWei,
+    query: { enabled: canSimulate && mode === "whitelist" && Boolean(whitelistStatus?.proof.length) },
   });
-
-  const mintedCount = totalMintedSoFar !== undefined ? Number(totalMintedSoFar) : undefined;
-  const isSoldOut = mintedCount !== undefined && mintedCount >= NFT_MAX_SUPPLY;
-  const remaining = mintedCount !== undefined ? Math.max(NFT_MAX_SUPPLY - mintedCount, 0) : undefined;
-  const mintProgress = mintedCount !== undefined ? Math.min(mintedCount / NFT_MAX_SUPPLY, 1) : 0;
-
-  const { error: simulateError, isPending: isSimulatePending } = useSimulateContract({
+  const { error: simulatePublicError, isPending: isSimulatingPublic } = useSimulateContract({
     ...contract,
     functionName: "mintCanvas",
     args: [BigInt(quantity)],
     value: totalPriceWei,
-    query: { enabled: isConnected && !isSoldOut && totalPriceWei !== undefined },
+    query: { enabled: canSimulate && mode === "public" },
   });
 
-  const hasInsufficientFundsError = Boolean(
-    simulateError && (simulateError.message.includes("insufficient funds") || (simulateError as { shortMessage?: string })?.shortMessage?.includes("insufficient funds"))
-  );
-
+  const simulateError = mode === "whitelist" ? simulateWhitelistError : simulatePublicError;
+  const isSimulatePending = mode === "whitelist" ? isSimulatingWhitelist : isSimulatingPublic;
+  const hasInsufficientFundsError = Boolean(simulateError && (simulateError.message.includes("insufficient funds") || (simulateError as { shortMessage?: string })?.shortMessage?.includes("insufficient funds")));
   const receipt = useWaitForTransactionReceipt({ hash });
 
   useEffect(() => {
     if (hash) {
       mintProcessedRef.current = false;
-      if (mintResetTimeoutRef.current) {
-        clearTimeout(mintResetTimeoutRef.current);
-        mintResetTimeoutRef.current = null;
-      }
+      if (mintResetTimeoutRef.current) clearTimeout(mintResetTimeoutRef.current);
+      mintResetTimeoutRef.current = null;
     }
   }, [hash]);
 
-  useEffect(() => {
-    return () => {
-      if (mintResetTimeoutRef.current) clearTimeout(mintResetTimeoutRef.current);
-    };
-  }, []);
+  useEffect(() => () => { if (mintResetTimeoutRef.current) clearTimeout(mintResetTimeoutRef.current); }, []);
 
   useEffect(() => {
     if (!receipt.isSuccess || mintProcessedRef.current) return;
     mintProcessedRef.current = true;
     setMintSent(true);
     void refetchTotalMinted();
+    void refetchPublicAvailable();
+    void refetchPublicMintedByMe();
+    void refetchWlRemaining();
     pushToast({
       title: "Canvas minted",
       description: `You minted ${quantity} canvas${quantity > 1 ? "es" : ""} for ${formattedPrice} ETH.`,
@@ -95,16 +169,11 @@ export default function MintCanvasV2({ fallbackPriceEth = 0.003, onMintSuccess }
       hrefLabel: "View transaction",
     });
     onMintSuccess?.();
-    mintResetTimeoutRef.current = setTimeout(() => {
-      setMintSent(false);
-      mintResetTimeoutRef.current = null;
-    }, 3000);
-  }, [receipt.isSuccess, refetchTotalMinted, pushToast, onMintSuccess, hash, quantity, formattedPrice]);
+    mintResetTimeoutRef.current = setTimeout(() => { setMintSent(false); mintResetTimeoutRef.current = null; }, 3000);
+  }, [receipt.isSuccess, refetchTotalMinted, refetchPublicAvailable, refetchPublicMintedByMe, refetchWlRemaining, pushToast, onMintSuccess, hash, quantity, formattedPrice]);
 
   useEffect(() => {
-    if (receipt.isError) {
-      pushToast({ title: "Mint failed", description: "The transaction did not complete. Check your wallet and try again.", variant: "error" });
-    }
+    if (receipt.isError) pushToast({ title: "Mint failed", description: "The transaction did not complete. Check your wallet and try again.", variant: "error" });
   }, [receipt.isError, pushToast]);
 
   useEffect(() => {
@@ -114,33 +183,43 @@ export default function MintCanvasV2({ fallbackPriceEth = 0.003, onMintSuccess }
     }
   }, [error, pushToast]);
 
-  const isMintButtonDisabled = !isConnected || isPending || isSimulatePending || receipt.isLoading || isSoldOut || hasInsufficientFundsError || mintSent || totalPriceWei === undefined;
+  const mintedCount = totalMintedSoFar !== undefined ? Number(totalMintedSoFar) : undefined;
+  const isSoldOut = mintedCount !== undefined && mintedCount >= NFT_MAX_SUPPLY;
+  const remaining = mintedCount !== undefined ? Math.max(NFT_MAX_SUPPLY - mintedCount, 0) : undefined;
+  const mintProgress = mintedCount !== undefined ? Math.min(mintedCount / NFT_MAX_SUPPLY, 1) : 0;
+  const isNotOpenYet = isMintOpen === false;
+  const isMintButtonDisabled = !isConnected || isPending || isSimulatePending || receipt.isLoading || isSoldOut || isNotOpenYet || hasInsufficientFundsError || mintSent || maxQuantity <= 0 || totalPriceWei === undefined;
 
-  const buttonLabel = mintSent
-    ? "Minted"
-    : isSoldOut
-      ? "Sold out"
-      : isPending
-        ? "Confirm in wallet…"
-        : receipt.isLoading
-          ? "Confirming…"
-          : `Mint ${quantity > 1 ? `${quantity} canvases` : "canvas"} for ${formattedPrice} ETH`;
+  const handleMint = () => {
+    if (totalPriceWei === undefined) return;
+    if (mode === "whitelist" && whitelistStatus) {
+      writeContract({ ...contract, functionName: "mintWhitelist", args: [BigInt(quantity), whitelistStatus.proof], value: totalPriceWei });
+    } else {
+      writeContract({ ...contract, functionName: "mintCanvas", args: [BigInt(quantity)], value: totalPriceWei });
+    }
+  };
+
+  const buttonLabel = mintSent ? "Minted" : isSoldOut ? "Sold out" : isNotOpenYet ? "Mint not open" : isPending ? "Confirm in wallet…" : receipt.isLoading ? "Confirming…" : maxQuantity <= 0 ? (mode === "whitelist" ? "Whitelist allocation used" : "Public cap reached") : `Mint ${quantity > 1 ? `${quantity} canvases` : "canvas"} for ${formattedPrice} ETH`;
 
   return (
     <div>
+      {canUseWhitelist && (
+        <div className="mb-4 flex items-center gap-2 border border-[var(--border-hairline-strong)] p-1 text-xs font-[family-name:var(--font-geist-mono)]">
+          <button onClick={() => setMode("whitelist")} className={`flex-1 py-2 transition-colors ${mode === "whitelist" ? "bg-[var(--accent)] text-white" : "text-[var(--foreground-muted)]"}`}>
+            Whitelist ({wlRemainingForMe !== undefined ? Number(wlRemainingForMe as bigint) : 0} left)
+          </button>
+          <button onClick={() => setMode("public")} className={`flex-1 py-2 transition-colors ${mode === "public" ? "bg-[var(--accent)] text-white" : "text-[var(--foreground-muted)]"}`}>
+            Public
+          </button>
+        </div>
+      )}
+
       <div className="flex items-center justify-between gap-6">
         <div>
           <p className="eyebrow-quiet">Price</p>
           <div className="mt-1 overflow-hidden">
             <AnimatePresence mode="popLayout" initial={false}>
-              <motion.h3
-                key={formattedPrice}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.18, ease: "easeOut" }}
-                className="font-[family-name:var(--font-fraunces)] text-3xl italic text-[var(--foreground)]"
-              >
+              <motion.h3 key={formattedPrice} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.18, ease: "easeOut" }} className="font-[family-name:var(--font-fraunces)] text-3xl italic text-[var(--foreground)]">
                 {formattedPrice} ETH
               </motion.h3>
             </AnimatePresence>
@@ -148,69 +227,19 @@ export default function MintCanvasV2({ fallbackPriceEth = 0.003, onMintSuccess }
         </div>
 
         <div className="flex items-center border border-[var(--border-hairline-strong)]">
-          <button
-            onClick={() => setQuantity((prev) => Math.max(prev - 1, 1))}
-            disabled={quantity <= 1}
-            aria-label="Decrease quantity"
-            className="grid h-10 w-10 place-items-center text-[var(--foreground-muted)] transition-colors hover:text-[var(--foreground)] disabled:opacity-30"
-          >
-            −
-          </button>
-          <div className="w-10 overflow-hidden text-center">
-            <AnimatePresence mode="popLayout" initial={false}>
-              <motion.span
-                key={quantity}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
-                className="block font-[family-name:var(--font-geist-mono)] text-sm text-[var(--foreground)]"
-              >
-                {quantity}
-              </motion.span>
-            </AnimatePresence>
-          </div>
-          <button
-            onClick={() => setQuantity((prev) => prev + 1)}
-            aria-label="Increase quantity"
-            className="grid h-10 w-10 place-items-center text-[var(--foreground-muted)] transition-colors hover:text-[var(--foreground)]"
-          >
-            +
-          </button>
+          <button onClick={() => setQuantity((prev) => Math.max(prev - 1, 1))} disabled={quantity <= 1} aria-label="Decrease quantity" className="grid h-10 w-10 place-items-center text-[var(--foreground-muted)] transition-colors hover:text-[var(--foreground)] disabled:opacity-30">−</button>
+          <div className="w-10 overflow-hidden text-center"><AnimatePresence mode="popLayout" initial={false}><motion.span key={quantity} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.15, ease: "easeOut" }} className="block font-[family-name:var(--font-geist-mono)] text-sm text-[var(--foreground)]">{quantity}</motion.span></AnimatePresence></div>
+          <button onClick={() => setQuantity((prev) => Math.min(prev + 1, Math.max(maxQuantity, 1)))} disabled={quantity >= maxQuantity} aria-label="Increase quantity" className="grid h-10 w-10 place-items-center text-[var(--foreground-muted)] transition-colors hover:text-[var(--foreground)] disabled:opacity-30">+</button>
         </div>
       </div>
 
-      <motion.button
-        whileHover={{ y: -1 }}
-        whileTap={{ scale: 0.98 }}
-        disabled={isMintButtonDisabled}
-        onClick={() =>
-          totalPriceWei !== undefined &&
-          writeContract({
-            ...contract,
-            functionName: "mintCanvas",
-            args: [BigInt(quantity)],
-            value: totalPriceWei,
-          })
-        }
-        className="quiet-button quiet-button--filled mt-6 w-full py-3 text-sm"
-      >
-        {buttonLabel}
-      </motion.button>
+      {canUseWhitelist && countdown && <p className="mt-3 text-right font-[family-name:var(--font-geist-mono)] text-xs text-[var(--foreground-muted)]">Whitelist window: {countdown}</p>}
+
+      <motion.button whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }} disabled={isMintButtonDisabled} onClick={handleMint} className="quiet-button quiet-button--filled mt-6 w-full py-3 text-sm">{buttonLabel}</motion.button>
 
       <div className="mt-5 border-t border-[var(--border-hairline)] pt-4">
-        <div className="h-1 w-full overflow-hidden bg-[var(--border-hairline)]">
-          <motion.div
-            className="h-full bg-[var(--accent)]"
-            initial={{ width: 0 }}
-            animate={{ width: `${mintProgress * 100}%` }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-          />
-        </div>
-        <div className="mt-3 flex items-center justify-between font-[family-name:var(--font-geist-mono)] text-xs text-[var(--foreground-muted)]">
-          <span>{mintedCount?.toLocaleString() ?? "—"} / {NFT_MAX_SUPPLY.toLocaleString()} minted</span>
-          <span>{remaining !== undefined ? `${remaining.toLocaleString()} remaining` : ""}</span>
-        </div>
+        <div className="h-1 w-full overflow-hidden bg-[var(--border-hairline)]"><motion.div className="h-full bg-[var(--accent)]" initial={{ width: 0 }} animate={{ width: `${mintProgress * 100}%` }} transition={{ duration: 0.4, ease: "easeOut" }} /></div>
+        <div className="mt-3 flex items-center justify-between font-[family-name:var(--font-geist-mono)] text-xs text-[var(--foreground-muted)]"><span>{mintedCount?.toLocaleString() ?? "—"} / {NFT_MAX_SUPPLY.toLocaleString()} minted</span><span>{remaining !== undefined ? `${remaining.toLocaleString()} remaining` : ""}</span></div>
       </div>
 
       {!isConnected && <p className="mt-3 text-sm text-[var(--accent)]">Connect your wallet to mint.</p>}
