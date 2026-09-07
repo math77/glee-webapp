@@ -11,6 +11,7 @@ const links = [
   { href: "/about", label: "About" },
   { href: "/create", label: "Paint" },
   { href: "/gallery", label: "Gallery" },
+  { href: "/next-chapter", label: "Glee Next Chapter" },
 ];
 
 interface HeaderProps {
