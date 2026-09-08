@@ -16,7 +16,7 @@ export default function NextChapter() {
         >
           <p className="eyebrow-quiet">Glee Next Chapter</p>
           <h1 className="mt-6 font-[family-name:var(--font-fraunces)] text-6xl italic leading-none text-[var(--foreground)] sm:text-8xl">
-            Coming soon
+            Coming soon 09/30/2026
           </h1>
         </motion.div>
       </main>
