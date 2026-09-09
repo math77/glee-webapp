@@ -48,6 +48,7 @@ import "./globals.css";
 import Web3Provider from "./Web3Provider";
 import { ToastProvider } from "@/components/Toast/ToastProvider";
 import AttributionBanner from "@/components/AttributionBanner/AttributionBanner";
+import HomeMintSuccessWatcher from "@/components/HomeMintSuccessWatcher/HomeMintSuccessWatcher";
 import { SITE_URL } from "@/utils/siteConfig";
 
 
@@ -105,6 +106,7 @@ export default function RootLayout({
           <ToastProvider>
             {children}
             <AttributionBanner />
+            <HomeMintSuccessWatcher />
           </ToastProvider>
         </Web3Provider>
       </body>
