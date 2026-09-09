@@ -1,4 +1,4 @@
-import { createPublicClient, decodeFunctionData, http, zeroAddress } from "viem";
+import { createPublicClient, decodeFunctionData, decodeEventLog, http, zeroAddress } from "viem";
 import { gleeABI, GLEE_CONTRACT_ADDRESS, GLEE_V2_CONTRACT_ADDRESS, gleeV2ABI } from "@/utils/contractAbi";
 //import { baseSepolia, BASE_SEPOLIA_RPC_URL } from "@/utils/chain";
 import { baseSepolia } from "viem/chains";
@@ -26,7 +26,7 @@ export async function verifyMintTransaction(hash: `0x${string}`, wallet: string)
     functionName = decoded.functionName;
     quantity = decoded.args[0] as bigint;
 
-    console.log("DECODED: ", decoded);
+    console.log("DECODED FUNCTION: ", decoded);
 
   } catch {
     const decoded = decodeFunctionData({ abi: gleeV2ABI, data: tx.input });
@@ -34,12 +34,33 @@ export async function verifyMintTransaction(hash: `0x${string}`, wallet: string)
     functionName = decoded.functionName;
     quantity = decoded.args[0] as bigint;
 
-    console.log("DECODED: ", decoded);
+    console.log("DECODED FUNCTION: ", decoded);
   }
 
   const receipt = await client.getTransactionReceipt({ hash });
   if (receipt.status !== "success") return null;
 
+  const mintedCount = receipt.logs.filter((log) => {
+    try {
+      const decoded = decodeEventLog({
+        abi: gleeV2ABI,
+        data: log.data,
+        topics: log.topics,
+      });
+
+      console.log("DECODED LOG: ", decoded);
+      if (decoded.eventName !== "Transfer") return false;
+
+      return (
+        decoded.args.from.toLowerCase() === zeroAddress.toLowerCase() &&
+        decoded.args.to.toLowerCase() === wallet.toLowerCase()
+      );
+    } catch {
+      return false;
+    }
+  }).length;
+
+  /*
   const mintedCount = receipt.logs.filter((log) => {
     const topics = log.topics;
     console.log("TOPICS: ", topics);
@@ -47,6 +68,7 @@ export async function verifyMintTransaction(hash: `0x${string}`, wallet: string)
       topics[1]?.toLowerCase().endsWith(zeroAddress.slice(2).toLowerCase()) &&
       topics[2]?.toLowerCase().endsWith(wallet.slice(2).toLowerCase());
   }).length;
+  */
 
   console.log("MINTED COUNT: ", mintedCount);
 
