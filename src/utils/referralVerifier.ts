@@ -1,8 +1,8 @@
 import { createPublicClient, decodeFunctionData, http, zeroAddress } from "viem";
 import { gleeABI, GLEE_CONTRACT_ADDRESS, GLEE_V2_CONTRACT_ADDRESS, gleeV2ABI } from "@/utils/contractAbi";
-import { robinhoodChain, ROBINHOOD_CHAIN_RPC_URL } from "@/utils/chain";
+import { baseSepolia, BASE_SEPOLIA_RPC_URL } from "@/utils/chain";
 
-const client = createPublicClient({ chain: robinhoodChain, transport: http(ROBINHOOD_CHAIN_RPC_URL) });
+const client = createPublicClient({ chain: baseSepolia, transport: http(BASE_SEPOLIA_RPC_URL) });
 const contracts = [GLEE_CONTRACT_ADDRESS.toLowerCase(), GLEE_V2_CONTRACT_ADDRESS.toLowerCase()];
 
 export async function verifyMintTransaction(hash: `0x${string}`, wallet: string) {
