@@ -9,7 +9,12 @@ const client = createPublicClient({ chain: baseSepolia, transport: http(rpc) });
 const contracts = [GLEE_CONTRACT_ADDRESS.toLowerCase(), GLEE_V2_CONTRACT_ADDRESS.toLowerCase()];
 
 export async function verifyMintTransaction(hash: `0x${string}`, wallet: string) {
+  console.log("HASH: ", hash);
+  
   const tx = await client.getTransaction({ hash });
+
+  console.log("TX: ", tx);
+
   if (!tx.to || !contracts.includes(tx.to.toLowerCase())) return null;
   if (tx.from.toLowerCase() !== wallet.toLowerCase()) return null;
 
