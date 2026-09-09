@@ -17,6 +17,9 @@ export async function verifyMintTransaction(hash: `0x${string}`, wallet: string)
     if (decoded.functionName !== "mintCanvas" && decoded.functionName !== "mintWhitelist") return null;
     functionName = decoded.functionName;
     quantity = decoded.args[0] as bigint;
+
+    console.log("DECODED: ", decoded);
+
   } catch {
     const decoded = decodeFunctionData({ abi: gleeABI, data: tx.input });
     if (decoded.functionName !== "mintCanvas" && decoded.functionName !== "mintWhitelist") return null;
