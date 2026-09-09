@@ -18,7 +18,7 @@ import {
   QueryClient,
 } from "@tanstack/react-query";
 
-const ALCHEMY_ID = process.env.NEXT_PUBLIC_ALCHEMY_ID as string;
+//const ALCHEMY_ID = process.env.NEXT_PUBLIC_ALCHEMY_ID as string;
 const PROJECT_ID = process.env.NEXT_PUBLIC_PROJECT_ID as string;
 
 const config = getDefaultConfig({

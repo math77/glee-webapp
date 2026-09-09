@@ -1,8 +1,11 @@
 import { createPublicClient, decodeFunctionData, http, zeroAddress } from "viem";
 import { gleeABI, GLEE_CONTRACT_ADDRESS, GLEE_V2_CONTRACT_ADDRESS, gleeV2ABI } from "@/utils/contractAbi";
-import { baseSepolia, BASE_SEPOLIA_RPC_URL } from "@/utils/chain";
+//import { baseSepolia, BASE_SEPOLIA_RPC_URL } from "@/utils/chain";
+import { baseSepolia } from "viem/chains";
 
-const client = createPublicClient({ chain: baseSepolia, transport: http(BASE_SEPOLIA_RPC_URL) });
+const rpc = "https://base-sepolia.g.alchemy.com/v2/alch_ifvAZ57PVKAumhd4037lE"
+
+const client = createPublicClient({ chain: baseSepolia, transport: http(rpc) });
 const contracts = [GLEE_CONTRACT_ADDRESS.toLowerCase(), GLEE_V2_CONTRACT_ADDRESS.toLowerCase()];
 
 export async function verifyMintTransaction(hash: `0x${string}`, wallet: string) {
