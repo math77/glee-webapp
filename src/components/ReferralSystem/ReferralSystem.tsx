@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAccount } from "wagmi";
 import { useToast } from "../Toast/ToastProvider";
 
 const STORAGE_KEY = "glee_referral_code";
+const TX_STORAGE_KEY = "glee_last_mint_tx";
 
 type Profile = { code: string; points: number };
 
@@ -13,7 +14,6 @@ function ReferralPanel({ profile }: { profile: Profile | null }) {
   const [input, setInput] = useState("");
   const [copied, setCopied] = useState(false);
   const [status, setStatus] = useState("");
-  const { pushToast } = useToast();
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -49,17 +49,19 @@ function ReferralPanel({ profile }: { profile: Profile | null }) {
 
   return (
     <div className="mt-5 border-t border-[var(--border-hairline)] pt-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="eyebrow-quiet">Your referral code</p>
-          <button onClick={copyOwnCode} disabled={!profile?.code} className="mt-1 font-[family-name:var(--font-geist-mono)] text-sm tracking-[0.16em] text-[var(--foreground)] disabled:opacity-40">
-            {profile?.code ?? "Generating…"}
-          </button>
+      {profile ? (
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="eyebrow-quiet">Your referral code</p>
+            <button onClick={copyOwnCode} className="mt-1 font-[family-name:var(--font-geist-mono)] text-sm tracking-[0.16em] text-[var(--foreground)]">
+              {profile.code}
+            </button>
+          </div>
+          <button onClick={copyOwnCode} className="quiet-button px-3 py-2 text-xs">{copied ? "Copied" : "Copy"}</button>
         </div>
-        <button onClick={copyOwnCode} disabled={!profile?.code} className="quiet-button px-3 py-2 text-xs">
-          {copied ? "Copied" : "Copy"}
-        </button>
-      </div>
+      ) : (
+        <p className="text-xs leading-relaxed text-[var(--foreground-muted)]">Mint a canvas to unlock your own referral code.</p>
+      )}
 
       <label className="studio-label mt-4 block">Use a referral code</label>
       <div className="mt-2 flex gap-2">
@@ -79,6 +81,8 @@ export default function ReferralSystem() {
   const [mounted, setMounted] = useState(false);
   const [host, setHost] = useState<HTMLElement | null>(null);
   const { pushToast } = useToast();
+  const interceptedProvider = useRef<{ request: Function } | null>(null);
+  const originalRequest = useRef<Function | null>(null);
 
   useEffect(() => setMounted(true), []);
 
@@ -90,17 +94,36 @@ export default function ReferralSystem() {
     let cancelled = false;
     fetch(`/api/referrals?wallet=${address}`)
       .then((res) => res.json())
-      .then((data) => { if (!cancelled && data.code) setProfile({ code: data.code, points: Number(data.points ?? 0) }); })
+      .then((data) => { if (!cancelled && data.exists && data.code) setProfile({ code: data.code, points: Number(data.points ?? 0) }); })
       .catch(() => undefined);
     return () => { cancelled = true; };
   }, [address]);
 
   useEffect(() => {
+    if (!mounted) return;
+    const ethereum = (window as unknown as { ethereum?: { request: Function } }).ethereum;
+    if (!ethereum?.request) return;
+    interceptedProvider.current = ethereum;
+    originalRequest.current = ethereum.request.bind(ethereum);
+    ethereum.request = async (args: { method: string; params?: unknown[] }) => {
+      const result = await originalRequest.current!(args);
+      if (args.method === "eth_sendTransaction" && typeof result === "string" && /^0x[a-fA-F0-9]{64}$/.test(result)) {
+        sessionStorage.setItem(TX_STORAGE_KEY, result);
+      }
+      return result;
+    };
+    return () => {
+      if (interceptedProvider.current && originalRequest.current) interceptedProvider.current.request = originalRequest.current;
+      interceptedProvider.current = null;
+      originalRequest.current = null;
+    };
+  }, [mounted]);
+
+  useEffect(() => {
     if (!address || !mounted) return;
     const findHost = () => {
-      const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>("button"));
-      const mintButton = buttons.find((button) => /^Mint /.test(button.textContent?.trim() ?? ""));
-      const panel = mintButton?.closest(".studio-panel") as HTMLElement | null;
+      const button = Array.from(document.querySelectorAll<HTMLButtonElement>("button")).find((item) => /^Mint /.test(item.textContent?.trim() ?? ""));
+      const panel = button?.closest(".studio-panel") as HTMLElement | null;
       if (!panel) return;
       let node = panel.querySelector<HTMLElement>("[data-glee-referral-host]");
       if (!node) {
@@ -127,12 +150,15 @@ export default function ReferralSystem() {
       }
       if (handled) return;
       handled = true;
-      const code = localStorage.getItem(STORAGE_KEY);
+      const tx = sessionStorage.getItem(TX_STORAGE_KEY);
+      if (!tx) return;
+      const referralCode = localStorage.getItem(STORAGE_KEY);
       const response = await fetch("/api/referrals/process", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wallet: address, referralCode: code || undefined, transactionHash: "0x" + "0".repeat(64) }),
+        body: JSON.stringify({ wallet: address, referralCode: referralCode || undefined, transactionHash: tx }),
       });
+      sessionStorage.removeItem(TX_STORAGE_KEY);
       if (!response.ok) return;
       const data = await response.json();
       if (data.code) setProfile({ code: data.code, points: Number(data.points ?? 0) });
@@ -146,6 +172,6 @@ export default function ReferralSystem() {
     return () => observer.disconnect();
   }, [address, mounted, pushToast]);
 
-  if (!host || !profile || !mounted) return null;
+  if (!mounted || !host) return null;
   return createPortal(<ReferralPanel profile={profile} />, host);
 }
