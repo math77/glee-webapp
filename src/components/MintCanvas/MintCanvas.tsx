@@ -37,7 +37,7 @@ export default function MintCanvas({ fallbackPriceEth = 0.003, onMintSuccess }: 
   const [countdown, setCountdown] = useState("");
   const processedRef = useRef(false);
   const lastErrorRef = useRef<unknown>(null);
-  const resetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resetRef = useRef<number | null>(null);
   const { pushToast } = useToast();
   const { address, isConnected } = useAccount();
 
@@ -68,7 +68,7 @@ export default function MintCanvas({ fallbackPriceEth = 0.003, onMintSuccess }: 
   }, [address]);
 
   const isWlWindowActive = Boolean(isMintOpen) && wlDeadline !== undefined && BigInt(Math.floor(Date.now() / 1000)) < (wlDeadline as bigint);
-  const hasWlRemaining = wlRemainingForMe !== undefined && (wlRemainingForMe as bigint) > 0n;
+  const hasWlRemaining = wlRemainingForMe !== undefined && (wlRemainingForMe as bigint) > BigInt(0);
   const canUseWhitelist = isWlWindowActive && Boolean(whitelistStatus?.eligible) && hasWlRemaining;
   useEffect(() => { setMode(canUseWhitelist ? "whitelist" : "public"); }, [canUseWhitelist]);
 
@@ -125,6 +125,7 @@ export default function MintCanvas({ fallbackPriceEth = 0.003, onMintSuccess }: 
       .catch((referralError) => console.error("GLEE referral processing failed", referralError));
 
     onMintSuccess?.();
+    //TO DO
     resetRef.current = window.setTimeout(() => { setMintSent(false); resetRef.current = null; }, 3000);
   }, [receipt.isSuccess, refetchTotalMinted, refetchPublicAvailable, refetchPublicMintedByMe, refetchWlRemaining, pushToast, onMintSuccess, hash, address, quantity, formattedPrice]);
 

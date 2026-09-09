@@ -36,7 +36,7 @@ export default function MintCanvasV2({ fallbackPriceEth = 0.003, onMintSuccess }
   const [whitelistStatus, setWhitelistStatus] = useState<WhitelistStatus | null>(null);
   const [countdown, setCountdown] = useState("");
   const processedRef = useRef(false);
-  const resetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resetRef = useRef<number | null>(null);
   const lastErrorRef = useRef<unknown>(null);
   const { pushToast } = useToast();
   const { address, isConnected } = useAccount();
@@ -68,7 +68,7 @@ export default function MintCanvasV2({ fallbackPriceEth = 0.003, onMintSuccess }
   }, [address]);
 
   const isWlWindowActive = Boolean(isMintOpen) && wlDeadline !== undefined && BigInt(Math.floor(Date.now() / 1000)) < (wlDeadline as bigint);
-  const hasWlRemaining = wlRemainingForMe !== undefined && (wlRemainingForMe as bigint) > 0n;
+  const hasWlRemaining = wlRemainingForMe !== undefined && (wlRemainingForMe as bigint) > BigInt(0);
   const canUseWhitelist = isWlWindowActive && Boolean(whitelistStatus?.eligible) && hasWlRemaining;
   useEffect(() => { setMode(canUseWhitelist ? "whitelist" : "public"); }, [canUseWhitelist]);
 
