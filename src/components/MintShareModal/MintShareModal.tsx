@@ -16,7 +16,7 @@ export default function MintShareModal({ quantity, onClose }: MintShareModalProp
     return window.location.href.split("#")[0];
   }, []);
 
-  const shareText = `I just minted ${quantity} GLEE canvas${quantity > 1 ? "es" : ""} 🎨 on GLEE — an onchain pixel art garden on Robinhood Chain.`;
+  const shareText = `I just minted ${quantity} GLEE canvas${quantity > 1 ? "es" : ""} 🎨 on GLEE — an fully onchain community-crafted experimental artwork on Robinhood Chain.`;
   const xUrl = useMemo(() => {
     if (!shareUrl) return "https://x.com/intent/post";
     return `https://x.com/intent/post?text=${encodeURIComponent(`${shareText}\n\n${shareUrl}`)}`;

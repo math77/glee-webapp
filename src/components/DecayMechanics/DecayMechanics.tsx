@@ -21,7 +21,7 @@ const cards: [string, string, string][] = [
   [
     "04",
     "The continuation",
-    " ",
+    "GLEE unfolds through chapters (think new contracts/extensions), with each chapter introducing new layers to the experiment and building upon the systems established before it. So, GLEE is less of a static one-off NFT collection and more of a dynamic, evolving, programmable serie of pieces. Part canvas, part game, part puzzle, and part social system. Some of its rules are visible from the beginning. Others are meant to be discovered.",
   ],
 ];
 
