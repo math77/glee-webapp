@@ -11,9 +11,11 @@ function readMintQuantity(): number {
 }
 
 export default function HomeMintSuccessWatcher() {
+  const [mounted, setMounted] = useState(false);
   const [shareQuantity, setShareQuantity] = useState<number | null>(null);
 
   useEffect(() => {
+    setMounted(true);
     if (window.location.pathname !== "/") return;
 
     let handled = false;
@@ -43,7 +45,7 @@ export default function HomeMintSuccessWatcher() {
     return () => observer.disconnect();
   }, []);
 
-  if (shareQuantity === null || window.location.pathname !== "/") return null;
+  if (!mounted || shareQuantity === null) return null;
 
   return <MintShareModal quantity={shareQuantity} onClose={() => setShareQuantity(null)} />;
 }
