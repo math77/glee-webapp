@@ -10,35 +10,42 @@ async function ensureCode(wallet: string) {
   const { data: existing, error } = await db.from("referral_codes").select("id,code,points").eq("wallet_address", wallet).maybeSingle();
   if (error) throw error;
   if (existing) return existing;
-  for (let attempt = 0; attempt < 8; attempt++) {
+
+  for (let attempt = 0; attempt < 10; attempt++) {
     const code = generateReferralCode();
     const { data, error: insertError } = await db.from("referral_codes").insert({ wallet_address: wallet, code }).select("id,code,points").maybeSingle();
     if (data && !insertError) return data;
     if (insertError?.code !== "23505") throw insertError;
   }
+
   throw new Error("Could not create referral code");
 }
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("hello: ");
-
     const body = await request.json() as { wallet?: string; referralCode?: string; transactionHash?: `0x${string}` };
-
-    console.log("BODY: ", body);
-
-    if (!body.wallet || !isAddress(body.wallet) || !body.transactionHash) return NextResponse.json({ error: "wallet and transactionHash are required" }, { status: 400 });
+    if (!body.wallet || !isAddress(body.wallet) || !body.transactionHash) {
+      return NextResponse.json({ error: "wallet and transactionHash are required" }, { status: 400 });
+    }
 
     const wallet = body.wallet.toLowerCase();
     const code = normalizeReferralCode(body.referralCode);
     const mint = await verifyMintTransaction(body.transactionHash, wallet);
-
-    console.log("MINT: ", mint);
-
     if (!mint) return NextResponse.json({ error: "Mint transaction could not be verified" }, { status: 400 });
 
     const ownCode = await ensureCode(wallet);
-    if (!code) return NextResponse.json({ verified: true, attributed: false, code: ownCode.code, points: Number(ownCode.points ?? 0) });
+
+    if (!code) {
+      return NextResponse.json({
+        verified: true,
+        attributed: false,
+        transactionHash: mint.transactionHash,
+        quantity: mint.quantity,
+        mintType: mint.mintType,
+        code: ownCode.code,
+        points: Number(ownCode.points ?? 0),
+      });
+    }
 
     const { data: referrer, error: referrerError } = await db.from("referral_codes").select("id,wallet_address").eq("code", code).maybeSingle();
     if (referrerError) throw referrerError;
@@ -63,7 +70,17 @@ export async function POST(request: NextRequest) {
     const { data: updated, error: updatedError } = await db.from("referral_codes").select("code,points").eq("wallet_address", wallet).single();
     if (updatedError) throw updatedError;
 
-    return NextResponse.json({ verified: true, attributed: inserted, transactionHash: mint.transactionHash, quantity: mint.quantity, mintType: mint.mintType, minterPoints: Number(minterPoints), referrerPoints: Number(referrerPoints), code: updated.code, points: Number(updated.points ?? 0) });
+    return NextResponse.json({
+      verified: true,
+      attributed: inserted,
+      transactionHash: mint.transactionHash,
+      quantity: mint.quantity,
+      mintType: mint.mintType,
+      minterPoints: Number(minterPoints),
+      referrerPoints: Number(referrerPoints),
+      code: updated.code,
+      points: Number(updated.points ?? 0),
+    });
   } catch (error) {
     console.error("referral processing failed", error);
     return NextResponse.json({ error: "Referral processing failed" }, { status: 500 });
