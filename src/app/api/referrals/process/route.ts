@@ -21,12 +21,20 @@ async function ensureCode(wallet: string) {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("hello: ");
+
     const body = await request.json() as { wallet?: string; referralCode?: string; transactionHash?: `0x${string}` };
+
+    console.log("BODY: ", body);
+
     if (!body.wallet || !isAddress(body.wallet) || !body.transactionHash) return NextResponse.json({ error: "wallet and transactionHash are required" }, { status: 400 });
 
     const wallet = body.wallet.toLowerCase();
     const code = normalizeReferralCode(body.referralCode);
     const mint = await verifyMintTransaction(body.transactionHash, wallet);
+
+    console.log("MINT: ", mint);
+
     if (!mint) return NextResponse.json({ error: "Mint transaction could not be verified" }, { status: 400 });
 
     const ownCode = await ensureCode(wallet);
