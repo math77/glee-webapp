@@ -49,7 +49,6 @@ import Web3Provider from "./Web3Provider";
 import { ToastProvider } from "@/components/Toast/ToastProvider";
 import AttributionBanner from "@/components/AttributionBanner/AttributionBanner";
 import HomeMintSuccessWatcher from "@/components/HomeMintSuccessWatcher/HomeMintSuccessWatcher";
-import ReferralSystem from "@/components/ReferralSystem/ReferralSystem";
 import { SITE_URL } from "@/utils/siteConfig";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -74,7 +73,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             {children}
             <AttributionBanner />
             <HomeMintSuccessWatcher />
-            <ReferralSystem />
           </ToastProvider>
         </Web3Provider>
       </body>
