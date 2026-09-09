@@ -13,8 +13,8 @@ export function generateReferralCode(): string {
 
 export const PUBLIC_MINT_POINTS_PER_NFT = 100;
 export const WHITELIST_MINT_POINTS_PER_NFT = 125;
-export const REFERRER_BONUS_NUMERATOR = 5n;
-export const REFERRER_BONUS_DENOMINATOR = 4n;
+export const REFERRER_BONUS_NUMERATOR = BigInt(5);
+export const REFERRER_BONUS_DENOMINATOR = BigInt(4);
 
 export function calculateReferralPoints(quantity: number, mintType: "whitelist" | "public") {
   const minterPerNft = mintType === "whitelist" ? WHITELIST_MINT_POINTS_PER_NFT : PUBLIC_MINT_POINTS_PER_NFT;

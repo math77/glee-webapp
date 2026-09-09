@@ -25,8 +25,13 @@ const cards: [string, string, string][] = [
   ],
   [
     "05",
-    "The continuation",
+    "A system rather than a static piece",
     "So, GLEE is less of a static one-off NFT collection and more of a dynamic, evolving, programmable serie of pieces. Part canvas, part game, part puzzle, and part social system. Some of its rules are visible from the beginning. Others are meant to be discovered.",
+  ],
+  [
+    "06",
+    "Community-crafted and active",
+    "The community and the public as active participants. Whether in a concrete way—by painting the canvas — or through the very act of trading in the market, giving tips, or REDACTED FOR NEXT CHAPTER",
   ],
 ];
 
