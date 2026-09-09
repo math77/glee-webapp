@@ -29,10 +29,12 @@ export async function verifyMintTransaction(hash: `0x${string}`, wallet: string)
     console.log("DECODED: ", decoded);
 
   } catch {
-    const decoded = decodeFunctionData({ abi: gleeABI, data: tx.input });
+    const decoded = decodeFunctionData({ abi: gleeV2ABI, data: tx.input });
     if (decoded.functionName !== "mintCanvas" && decoded.functionName !== "mintWhitelist") return null;
     functionName = decoded.functionName;
     quantity = decoded.args[0] as bigint;
+
+    console.log("DECODED: ", decoded);
   }
 
   const receipt = await client.getTransactionReceipt({ hash });
@@ -40,10 +42,13 @@ export async function verifyMintTransaction(hash: `0x${string}`, wallet: string)
 
   const mintedCount = receipt.logs.filter((log) => {
     const topics = log.topics;
+    console.log("TOPICS: ", topics);
     return log.address.toLowerCase() === tx.to!.toLowerCase() && topics[0]?.toLowerCase() === "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a06e3f22a1" &&
       topics[1]?.toLowerCase().endsWith(zeroAddress.slice(2).toLowerCase()) &&
       topics[2]?.toLowerCase().endsWith(wallet.slice(2).toLowerCase());
   }).length;
+
+  console.log("MINTED COUNT: ", mintedCount);
 
   if (mintedCount === 0 || BigInt(mintedCount) !== quantity) return null;
 
